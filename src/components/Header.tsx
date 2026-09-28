@@ -24,13 +24,13 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-slate-200 bg-white/95 backdrop-blur sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between no-print shadow-xs">
       {/* Zone 1: Single text element wordmark */}
       <div className="flex flex-col text-left">
-        <span className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 whitespace-nowrap leading-tight">
+        <span className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 whitespace-nowrap leading-tight">
           AZ AI Data Center Design Studio
         </span>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 font-medium">
-          <span>Developer: George Zhang</span>
+          <span className="text-sm font-semibold text-slate-700">Developer: George Zhang</span>
           <span className="inline-block w-1 h-1 rounded-full bg-slate-300"></span>
-          <span className="font-mono text-[11px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
+          <span className="font-mono text-xs px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md border border-slate-200">
             v1.0.0
           </span>
           {onOpenReadme && (
@@ -39,9 +39,9 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenReadme}
-                className="inline-flex items-center gap-1 font-sans text-[11px] px-2 py-0.5 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold rounded-md border border-blue-600 border-b-[2.5px] border-b-blue-800 shadow-[0_2px_4px_rgba(37,99,235,0.3)] active:translate-y-[1.5px] active:border-b-blue-700 active:shadow-none transition-all duration-75 cursor-pointer select-none"
+                className="inline-flex items-center gap-1.5 font-sans text-xs px-3 py-1 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-bold rounded-lg border border-blue-600 border-b-[3px] border-b-blue-800 shadow-[0_2px_5px_rgba(37,99,235,0.35)] active:translate-y-[2px] active:border-b-blue-700 active:shadow-none transition-all duration-75 cursor-pointer select-none"
               >
-                <BookOpen className="w-3 h-3" />
+                <BookOpen className="w-3.5 h-3.5" />
                 <span>Readme</span>
               </button>
             </>

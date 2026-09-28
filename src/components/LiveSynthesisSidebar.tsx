@@ -31,15 +31,9 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
       <div className="space-y-5">
         {/* Header */}
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 block mb-0.5">
-            Synthesis Engine
+          <span className="text-base font-bold uppercase tracking-wider text-blue-900 block">
+            Synthesis
           </span>
-          <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-            Live Engineering & Pricing
-          </h3>
-          <p className="text-[11px] text-slate-500 mt-0.5">
-            Real-time constraint and BOM modeling
-          </p>
         </div>
 
         {/* Physics Status Pill / Alert indicator */}
