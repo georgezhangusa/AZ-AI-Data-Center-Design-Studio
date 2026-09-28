@@ -1,7 +1,21 @@
 # AZ AI Data Center Design Studio
 
-> Engineered an interactive software for AI data center design that converts workload requirements into preliminary facility plans. Users configure GPUs, racks, substations, switchgear, 800V DC power, batteries, generators, cooling, and redundancy. It calculates capacity, PUE, costs, footprint, water use, and schedule, then generates engineering, financial, visualization, and proposal deliverable packages.
+Engineered an interactive software for AI data center design that converts workload requirements into preliminary facility plans. Users configure GPUs, racks, substations, switchgear, 800V DC power, batteries, generators, cooling, and redundancy. It calculates capacity, PUE, costs, footprint, water use, and schedule, then generates engineering, financial, visualization, and proposal deliverable packages.
 
+The AI data center design and configuration go through **three** stages:
+
+**1. Workload ingress and sizing**
+   - Choose presets such as 20–100 MW AI campuses.
+   - Select accelerator architecture, rack density, GPU count, and deployment region.
+   - Calculate estimated racks, critical IT load, white-space area, and coolant flow.
+
+**2. Component engineering**
+   - Configure substations, GIS/AIS yards, transformers, 800V DC or 480V AC distribution, generators, batteries, cooling systems, redundancy, and building structure.
+   - Continuously show engineering, cost, capacity, PUE, water usage, footprint, lead time, and projected COD metrics.
+
+**3. Deliverables and ROI**
+   - Generate or view aerial campus plans, electrical single-lines, mechanical P&IDs, ROI/TCO, BOMs, ESG analysis, 3D isometrics, site layouts, and thermal views.
+   - Export a formal PDF, pitch pack, or push the design to CRM/estimating and EPC workflows.
 ---
 
 ## Conceptual Demonstration & Collaboration
