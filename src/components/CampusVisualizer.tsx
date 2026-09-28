@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DataCenterConfig, EngineeringCalculation } from '../types/datacenter';
-import { Eye, Layers, Maximize2, RotateCcw, Thermometer, ZoomIn, ZoomOut } from 'lucide-react';
+import { Eye, Layers, Moon, RotateCcw, Sun, Thermometer, ZoomIn, ZoomOut } from 'lucide-react';
 
 interface CampusVisualizerProps {
   config: DataCenterConfig;
@@ -12,10 +12,12 @@ type ViewMode = 'isometric' | 'topdown' | 'thermal';
 export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('isometric');
+  const [canvasTheme, setCanvasTheme] = useState<'light' | 'dark'>('light');
   const [zoom, setZoom] = useState<number>(1);
   const [selectedZone, setSelectedZone] = useState<string | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const pulseOffsetRef = useRef<number>(0);
+  const fanRotationRef = useRef<number>(0);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -24,34 +26,66 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
     if (!ctx) return;
 
     let isRunning = true;
+    const isLight = canvasTheme === 'light';
 
     const render = () => {
       if (!isRunning) return;
-      pulseOffsetRef.current = (pulseOffsetRef.current + 0.4) % 24;
+      pulseOffsetRef.current = (pulseOffsetRef.current + 0.5) % 36;
+      fanRotationRef.current = (fanRotationRef.current + 0.08) % (Math.PI * 2);
 
-      const w = canvas.width;
-      const h = canvas.height;
+      // Hi-DPI Retina Display Crispness
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const displayWidth = Math.round(rect.width || 920);
+      const displayHeight = Math.round(rect.height || 440);
+
+      if (canvas.width !== displayWidth * dpr || canvas.height !== displayHeight * dpr) {
+        canvas.width = displayWidth * dpr;
+        canvas.height = displayHeight * dpr;
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // Map from virtual 920x440 coordinate system to actual element size
+      const scaleX = displayWidth / 920;
+      const scaleY = displayHeight / 440;
+      ctx.scale(scaleX, scaleY);
+
+      const w = 920;
+      const h = 440;
 
       ctx.clearRect(0, 0, w, h);
-      ctx.save();
 
-      // Background
+      // Canvas background (clean light drafting paper or dark cyber aesthetic)
+      const bgGradient = ctx.createRadialGradient(w * 0.5, h * 0.45, 60, w * 0.5, h * 0.5, w * 0.65);
       if (viewMode === 'thermal') {
-        ctx.fillStyle = '#060a14';
+        if (isLight) {
+          bgGradient.addColorStop(0, '#f8fafc');
+          bgGradient.addColorStop(1, '#f1f5f9');
+        } else {
+          bgGradient.addColorStop(0, '#0a0d18');
+          bgGradient.addColorStop(1, '#020409');
+        }
       } else {
-        ctx.fillStyle = '#0b1120';
+        if (isLight) {
+          bgGradient.addColorStop(0, '#ffffff');
+          bgGradient.addColorStop(1, '#f1f5f9');
+        } else {
+          bgGradient.addColorStop(0, '#0f172a');
+          bgGradient.addColorStop(1, '#020617');
+        }
       }
+      ctx.fillStyle = bgGradient;
       ctx.fillRect(0, 0, w, h);
 
-      // Center and apply zoom
-      ctx.translate(w / 2, h / 2);
-      ctx.scale(zoom, zoom);
-      ctx.translate(-w / 2, -h / 2);
-
-      // Draw subtle grid
-      ctx.strokeStyle = viewMode === 'thermal' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(30, 41, 59, 0.6)';
+      // Subtle CAD Blueprint grid
+      ctx.save();
+      ctx.strokeStyle = isLight
+        ? (viewMode === 'thermal' ? 'rgba(100, 116, 139, 0.12)' : 'rgba(148, 163, 184, 0.28)')
+        : (viewMode === 'thermal' ? 'rgba(56, 189, 248, 0.04)' : 'rgba(56, 189, 248, 0.07)');
       ctx.lineWidth = 1;
-      const gridSize = 32;
+      const gridSize = 28;
       for (let x = 0; x < w; x += gridSize) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
@@ -65,15 +99,33 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
         ctx.stroke();
       }
 
+      // Micro grid crosshairs
+      ctx.fillStyle = isLight ? 'rgba(100, 116, 139, 0.25)' : 'rgba(148, 163, 184, 0.15)';
+      for (let x = gridSize * 2; x < w; x += gridSize * 4) {
+        for (let y = gridSize * 2; y < h; y += gridSize * 4) {
+          ctx.fillRect(x - 2, y, 5, 1);
+          ctx.fillRect(x, y - 2, 1, 5);
+        }
+      }
+      ctx.restore();
+
+      // Apply Interactive Zoom centered on viewport
+      ctx.save();
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-w / 2, -h / 2);
+
       if (viewMode === 'isometric') {
-        renderIsometricCampus(ctx, w, h, config, calc, pulseOffsetRef.current, selectedZone);
+        renderIsometricCampus(ctx, w, h, config, calc, pulseOffsetRef.current, fanRotationRef.current, selectedZone, isLight);
       } else if (viewMode === 'topdown') {
-        renderTopDownSitePlan(ctx, w, h, config, calc, pulseOffsetRef.current, selectedZone);
+        renderTopDownSitePlan(ctx, w, h, config, calc, pulseOffsetRef.current, fanRotationRef.current, selectedZone, isLight);
       } else {
-        renderThermalHeatmap(ctx, w, h, config, calc, pulseOffsetRef.current);
+        renderThermalHeatmap(ctx, w, h, config, calc, pulseOffsetRef.current, isLight);
       }
 
-      ctx.restore();
+      ctx.restore(); // Undo zoom
+      ctx.restore(); // Undo dpr and virtual scaling
+
       animationFrameRef.current = requestAnimationFrame(render);
     };
 
@@ -85,28 +137,39 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [config, calc, viewMode, zoom, selectedZone]);
+  }, [config, calc, viewMode, zoom, selectedZone, canvasTheme]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const rect = canvas.getBoundingClientRect();
-    const scaleX = canvas.width / rect.width;
-    const scaleY = canvas.height / rect.height;
-    const x = (e.clientX - rect.left) * scaleX;
-    const y = (e.clientY - rect.top) * scaleY;
+    const x = ((e.clientX - rect.left) / rect.width) * 920;
+    const y = ((e.clientY - rect.top) / rect.height) * 440;
 
-    // Hit testing approximate regions
-    if (x < 240 && y < 240) {
-      setSelectedZone('substation');
-    } else if (x < 240 && y >= 240) {
-      setSelectedZone('btm');
-    } else if (x >= 240 && x <= 640) {
-      setSelectedZone('white_space');
-    } else if (x > 640) {
-      setSelectedZone('cooling');
+    if (viewMode === 'isometric') {
+      if (x >= 630) {
+        setSelectedZone(prev => prev === 'cooling' ? null : 'cooling');
+      } else if (x >= 380 && y >= 140) {
+        setSelectedZone(prev => prev === 'white_space' ? null : 'white_space');
+      } else if (x < 380 && y >= 110) {
+        setSelectedZone(prev => prev === 'btm' ? null : 'btm');
+      } else if (y < 160 && x >= 320 && x < 520) {
+        setSelectedZone(prev => prev === 'substation' ? null : 'substation');
+      } else {
+        setSelectedZone(null);
+      }
     } else {
-      setSelectedZone(null);
+      if (x < 265 && y < 220) {
+        setSelectedZone(prev => prev === 'substation' ? null : 'substation');
+      } else if (x < 265 && y >= 220) {
+        setSelectedZone(prev => prev === 'btm' ? null : 'btm');
+      } else if (x >= 265 && x <= 655) {
+        setSelectedZone(prev => prev === 'white_space' ? null : 'white_space');
+      } else if (x > 655) {
+        setSelectedZone(prev => prev === 'cooling' ? null : 'cooling');
+      } else {
+        setSelectedZone(null);
+      }
     }
   };
 
@@ -117,10 +180,10 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
         <div className="flex items-center gap-1.5 p-1 bg-slate-100 border border-slate-200 rounded-lg">
           <button
             onClick={() => setViewMode('isometric')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-75 flex items-center gap-1.5 cursor-pointer select-none ${
               viewMode === 'isometric'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white font-bold border border-blue-600 border-b-[2px] border-b-blue-800 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
@@ -128,10 +191,10 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
           </button>
           <button
             onClick={() => setViewMode('topdown')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-75 flex items-center gap-1.5 cursor-pointer select-none ${
               viewMode === 'topdown'
-                ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white font-bold border border-blue-600 border-b-[2px] border-b-blue-800 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
@@ -139,10 +202,10 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
           </button>
           <button
             onClick={() => setViewMode('thermal')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-all duration-75 flex items-center gap-1.5 cursor-pointer select-none ${
               viewMode === 'thermal'
-                ? 'bg-red-600 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-gradient-to-b from-red-500 to-red-600 text-white font-bold border border-red-600 border-b-[2px] border-b-red-800 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/50'
             }`}
           >
             <Thermometer className="w-3.5 h-3.5" />
@@ -150,78 +213,137 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
           </button>
         </div>
 
-        {/* Zoom controls */}
+        {/* Zoom & Viewport Controls */}
         <div className="flex items-center gap-2 text-xs">
+          {/* Canvas Theme Toggle */}
           <button
-            onClick={() => setZoom(prev => Math.min(1.8, prev + 0.15))}
-            className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs"
+            onClick={() => setCanvasTheme(prev => prev === 'light' ? 'dark' : 'light')}
+            className="px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1.5 active:translate-y-[1px]"
+            title={canvasTheme === 'light' ? 'Switch to Dark Canvas' : 'Switch to Light Canvas'}
+          >
+            {canvasTheme === 'light' ? (
+              <>
+                <Moon className="w-3.5 h-3.5 text-slate-600" />
+                <span className="text-[11px] font-medium hidden sm:inline">Dark Canvas</span>
+              </>
+            ) : (
+              <>
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[11px] font-medium hidden sm:inline">Light Canvas</span>
+              </>
+            )}
+          </button>
+
+          <button
+            onClick={() => setZoom(prev => Math.min(1.8, +(prev + 0.15).toFixed(2)))}
+            className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer active:translate-y-[1px]"
             title="Zoom In"
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
-            onClick={() => setZoom(prev => Math.max(0.7, prev - 0.15))}
-            className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs"
+            onClick={() => setZoom(prev => Math.max(0.7, +(prev - 0.15).toFixed(2)))}
+            className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer active:translate-y-[1px]"
             title="Zoom Out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => { setZoom(1); setSelectedZone(null); }}
-            className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs"
+            className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer active:translate-y-[1px]"
             title="Reset View"
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
-          <span className="text-slate-500 font-mono pl-1">{Math.round(zoom * 100)}%</span>
+          <span className="text-slate-500 font-mono pl-1 text-[11px] font-semibold">{Math.round(zoom * 100)}%</span>
         </div>
       </div>
 
-      {/* Canvas Viewport */}
-      <div className="relative rounded-xl border border-slate-200 bg-slate-950 overflow-hidden shadow-md">
+      {/* Canvas Viewport Container */}
+      <div className={`relative rounded-2xl overflow-hidden transition-colors duration-200 ${
+        canvasTheme === 'light'
+          ? 'border border-slate-300 bg-slate-100 shadow-md ring-1 ring-slate-900/5'
+          : 'border border-slate-800/80 bg-slate-950 shadow-2xl ring-1 ring-white/10'
+      } group`}>
         <canvas
           ref={canvasRef}
           width={920}
           height={440}
           onClick={handleCanvasClick}
-          className="w-full cursor-crosshair block"
+          className="w-full h-auto cursor-crosshair block aspect-[920/440]"
         />
 
-        {/* On-Canvas Campus Legend & Telemetry */}
-        <div className="absolute top-3 left-3 bg-white/95 backdrop-blur border border-slate-200 shadow-sm rounded-lg p-2.5 text-[11px] space-y-1 pointer-events-none">
-          <div className="text-slate-900 font-bold flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Facility Total: {calc.facilityTotalLoadMW} MW
+        {/* Tactical HUD Header */}
+        <div className={`absolute top-3 left-3 backdrop-blur-md rounded-xl p-3 text-[11px] space-y-1.5 pointer-events-none transition-colors ${
+          canvasTheme === 'light'
+            ? 'bg-white/92 border border-slate-200 shadow-lg text-slate-800 ring-1 ring-slate-900/5'
+            : 'bg-slate-900/90 border border-slate-700/80 shadow-lg text-white ring-1 ring-white/5'
+        }`}>
+          <div className={`font-bold flex items-center gap-2 ${canvasTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></span>
+            <span>Facility Load: <strong className={canvasTheme === 'light' ? 'text-emerald-600 font-mono' : 'text-emerald-400 font-mono'}>{calc.facilityTotalLoadMW} MW</strong></span>
+            <span className="text-slate-400 font-normal">| PUE <strong className={canvasTheme === 'light' ? 'text-blue-600 font-mono' : 'text-blue-400 font-mono'}>{calc.pue}</strong></span>
           </div>
-          <div className="text-slate-600 font-mono">
-            Critical IT: {calc.criticalITLoadMW.toFixed(1)} MW · Racks: {calc.totalRacks}
+          <div className={`font-mono text-[10px] flex items-center gap-2 ${canvasTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
+            <span>Critical IT: <span className={`${canvasTheme === 'light' ? 'text-blue-600' : 'text-cyan-300'} font-bold`}>{calc.criticalITLoadMW.toFixed(1)} MW</span></span>
+            <span>·</span>
+            <span>Racks: <span className={`${canvasTheme === 'light' ? 'text-slate-800' : 'text-slate-100'} font-bold`}>{calc.totalRacks}</span></span>
+            <span>·</span>
+            <span>Footprint: <span className={`${canvasTheme === 'light' ? 'text-slate-800' : 'text-slate-100'} font-bold`}>{Math.round(calc.totalFootprintSqFt / 1000)}k sq ft</span></span>
           </div>
-          <div className="text-slate-500 text-[10px]">
-            Click any campus sector below to inspect subsystem engineering specs
+          <div className={`text-[10px] flex items-center gap-1.5 pt-0.5 border-t ${canvasTheme === 'light' ? 'border-slate-200 text-slate-500' : 'border-slate-800 text-slate-400'}`}>
+            <span className={canvasTheme === 'light' ? 'text-blue-600 font-mono' : 'text-blue-400 font-mono'}>▸</span>
+            <span>Click any sector below to inspect real-time engineering telemetry</span>
           </div>
+        </div>
+
+        {/* Viewport Live Telemetry Chip */}
+        <div className={`absolute top-3 right-3 backdrop-blur rounded-lg px-2.5 py-1 text-[10px] font-mono pointer-events-none flex items-center gap-2 shadow-xs transition-colors ${
+          canvasTheme === 'light'
+            ? 'bg-white/90 border border-slate-200 text-slate-700'
+            : 'bg-slate-900/80 border border-slate-700/80 text-slate-300'
+        }`}>
+          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>
+          <span>BIM 3D ENGINE · LIVE</span>
         </div>
 
         {/* Selected Zone Inspector Overlay */}
         {selectedZone && (
-          <div className="absolute bottom-3 left-3 right-3 bg-white/98 backdrop-blur border border-blue-400 rounded-xl p-3.5 shadow-xl flex items-center justify-between animate-fadeIn">
-            <div className="space-y-0.5">
-              <span className="text-[10px] uppercase font-bold tracking-wider text-blue-600">Sector Details</span>
-              <h5 className="text-xs font-bold text-slate-900">
-                {selectedZone === 'substation' && `High-Voltage Substation Yard (${config.substationType.toUpperCase()} - ${calc.facilityTotalLoadMW} MVA)`}
-                {selectedZone === 'btm' && `BTM Power & Energy Storage Yard (${config.btmPower.toUpperCase()} + ${config.bessType.toUpperCase()})`}
-                {selectedZone === 'white_space' && `High-Density Compute White Space (${calc.totalRacks} Racks · ${calc.rackDensityKW} kW/rack)`}
-                {selectedZone === 'cooling' && `Central Heat Rejection Farm (${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} Tons)`}
-              </h5>
-              <p className="text-[11px] text-slate-600">
-                {selectedZone === 'substation' && `Dual-fed 115kV/230kV step-down to 34.5kV. Substation yard footprint: ${calc.substationYardSqFt.toLocaleString()} sq ft.`}
-                {selectedZone === 'btm' && `On-site fast-track generation with ride-through battery storage sized for instantaneous ramp synchronization.`}
-                {selectedZone === 'white_space' && `Direct-to-chip secondary fluid loop with ${config.serverPower === '800vdc' ? '800V DC central busway' : '480V AC distribution'} and ${calc.structuralSlabLoadPcf} lbs/sq ft structural slab rating.`}
-                {selectedZone === 'cooling' && `Cooling system operating at ${calc.wue} L/kWh WUE with total circulation flow of ${calc.totalCoolantFlowGPM.toLocaleString()} GPM.`}
+          <div className={`absolute bottom-3 left-3 right-3 backdrop-blur-md rounded-xl p-3.5 shadow-xl flex items-center justify-between animate-fadeIn transition-colors ${
+            canvasTheme === 'light'
+              ? 'bg-white/95 border border-blue-400/80 ring-1 ring-blue-500/20 text-slate-800'
+              : 'bg-slate-900/95 border border-blue-500/80 ring-1 ring-blue-500/30 text-white'
+          }`}>
+            <div className="space-y-1 max-w-3xl">
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] uppercase font-extrabold tracking-wider px-2 py-0.5 rounded-full border ${
+                  canvasTheme === 'light'
+                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                    : 'bg-blue-500/20 text-blue-300 border-blue-500/40'
+                }`}>
+                  Sector Telemetry
+                </span>
+                <span className={`text-xs font-bold ${canvasTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                  {selectedZone === 'substation' && `High-Voltage Substation Yard (${config.substationType.toUpperCase()} - ${calc.facilityTotalLoadMW} MVA)`}
+                  {selectedZone === 'btm' && `BTM Power & Energy Storage Yard (${config.btmPower.toUpperCase()} + ${config.bessType.toUpperCase()})`}
+                  {selectedZone === 'white_space' && `High-Density Compute White Space (${calc.totalRacks} Racks · ${calc.rackDensityKW} kW/rack)`}
+                  {selectedZone === 'cooling' && `Central Heat Rejection Farm (${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} Tons)`}
+                </span>
+              </div>
+              <p className={`text-[11px] leading-relaxed ${canvasTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
+                {selectedZone === 'substation' && `Dual-fed 115kV/230kV step-down to 34.5kV. Substation yard footprint: ${calc.substationYardSqFt.toLocaleString()} sq ft. Dual redundant transformer bays with oil containment trenches and blast mitigation firewalls.`}
+                {selectedZone === 'btm' && `On-site fast-track generation with ride-through battery storage sized for instantaneous ramp synchronization and microgrid frequency stabilization.`}
+                {selectedZone === 'white_space' && `Direct-to-chip secondary fluid loop with ${config.serverPower === '800vdc' ? '800V DC central busway' : '480V AC distribution'} and ${calc.structuralSlabLoadPcf} lbs/sq ft structural slab rating. Hot aisle containment with dual redundant CDU distribution.`}
+                {selectedZone === 'cooling' && `Cooling system operating at ${calc.wue} L/kWh WUE with total circulation flow of ${calc.totalCoolantFlowGPM.toLocaleString()} GPM. Variable frequency drive adiabatic dry coolers with intelligent ambient dry-bulb optimization.`}
               </p>
             </div>
             <button
               onClick={() => setSelectedZone(null)}
-              className="text-xs text-slate-600 hover:text-slate-900 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-lg transition"
+              className={`text-xs px-3 py-1.5 rounded-lg transition ml-4 shrink-0 cursor-pointer ${
+                canvasTheme === 'light'
+                  ? 'text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 border border-slate-300'
+                  : 'text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700'
+              }`}
             >
               Dismiss
             </button>
@@ -232,7 +354,7 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
   );
 };
 
-// --- RENDERING ROUTINES ---
+// --- ISOMETRIC RENDERING ROUTINE ---
 
 function renderIsometricCampus(
   ctx: CanvasRenderingContext2D,
@@ -241,25 +363,47 @@ function renderIsometricCampus(
   config: DataCenterConfig,
   calc: EngineeringCalculation,
   pulse: number,
-  selectedZone: string | null
+  fanRotation: number,
+  selectedZone: string | null,
+  isLight: boolean
 ) {
-  // Isometric projection helper
-  const originX = w * 0.48;
-  const originY = h * 0.22;
+  // Center projection origin - shifted downward so rear structures are fully visible
+  const originX = w * 0.49;
+  const originY = h * 0.41;
 
   const toIso = (x: number, y: number, z: number) => {
-    const isoX = originX + (x - y) * 1.35;
-    const isoY = originY + (x + y) * 0.75 - z * 1.2;
+    const isoX = originX + (x - y) * 1.12;
+    const isoY = originY + (x + y) * 0.54 - z * 0.95;
     return { x: isoX, y: isoY };
   };
 
-  // Draw 3D Box helper
+  // Helper: Draw 3D Box with realistic lighting, bevels, and drop shadow
   const drawIsoBox = (
     x: number, y: number, z: number,
     wBox: number, lBox: number, hBox: number,
     topColor: string, leftColor: string, rightColor: string,
-    isSelected: boolean
+    isSelected: boolean,
+    castShadow = true
   ) => {
+    // Ground Contact Drop Shadow
+    if (castShadow && z <= 0.5) {
+      ctx.save();
+      ctx.fillStyle = isLight ? 'rgba(15, 23, 42, 0.16)' : 'rgba(2, 6, 23, 0.65)';
+      ctx.filter = isLight ? 'blur(8px)' : 'blur(6px)';
+      const s1 = toIso(x - 6, y + lBox + 10, 0);
+      const s2 = toIso(x + wBox + 14, y + lBox + 10, 0);
+      const s3 = toIso(x + wBox + 14, y - 6, 0);
+      const s4 = toIso(x - 6, y - 6, 0);
+      ctx.beginPath();
+      ctx.moveTo(s1.x, s1.y);
+      ctx.lineTo(s2.x, s2.y);
+      ctx.lineTo(s3.x, s3.y);
+      ctx.lineTo(s4.x, s4.y);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
     // Vertices
     const p1 = toIso(x, y, z + hBox);
     const p2 = toIso(x + wBox, y, z + hBox);
@@ -270,7 +414,7 @@ function renderIsometricCampus(
     const b2 = toIso(x + wBox, y + lBox, z);
     const b3 = toIso(x + wBox, y, z);
 
-    // Left face
+    // Left face (Ambient shadow side)
     ctx.fillStyle = leftColor;
     ctx.beginPath();
     ctx.moveTo(p4.x, p4.y);
@@ -280,7 +424,7 @@ function renderIsometricCampus(
     ctx.closePath();
     ctx.fill();
 
-    // Right face
+    // Right face (Direct light side)
     ctx.fillStyle = rightColor;
     ctx.beginPath();
     ctx.moveTo(p3.x, p3.y);
@@ -290,7 +434,7 @@ function renderIsometricCampus(
     ctx.closePath();
     ctx.fill();
 
-    // Top face
+    // Top face (Skylight)
     ctx.fillStyle = topColor;
     ctx.beginPath();
     ctx.moveTo(p1.x, p1.y);
@@ -300,115 +444,387 @@ function renderIsometricCampus(
     ctx.closePath();
     ctx.fill();
 
-    // Outlines
-    ctx.strokeStyle = isSelected ? '#60a5fa' : 'rgba(255, 255, 255, 0.15)';
-    ctx.lineWidth = isSelected ? 2 : 1;
+    // Subtle edge highlight
+    ctx.strokeStyle = isSelected
+      ? '#2563eb'
+      : isLight
+      ? 'rgba(15, 23, 42, 0.14)'
+      : 'rgba(255, 255, 255, 0.12)';
+    ctx.lineWidth = isSelected ? 2.5 : 0.8;
+    ctx.beginPath();
+    ctx.moveTo(p1.x, p1.y);
+    ctx.lineTo(p2.x, p2.y);
+    ctx.lineTo(p3.x, p3.y);
+    ctx.lineTo(p4.x, p4.y);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(p3.x, p3.y);
+    ctx.lineTo(b2.x, b2.y);
     ctx.stroke();
   };
 
-  // 1. Campus Ground Concrete Pad
-  const groundPad = [
-    toIso(-140, -110, 0),
-    toIso(230, -110, 0),
-    toIso(230, 160, 0),
-    toIso(-140, 160, 0)
+  // 1. Campus Site Ground Pad
+  const groundCorners = [
+    toIso(-160, -130, 0),
+    toIso(255, -130, 0),
+    toIso(255, 180, 0),
+    toIso(-160, 180, 0)
   ];
-  ctx.fillStyle = '#0f172a';
+
+  // Ground Outer Landscape Rim
+  ctx.fillStyle = isLight ? '#e2e8f0' : '#081222';
   ctx.beginPath();
-  ctx.moveTo(groundPad[0].x, groundPad[0].y);
-  ctx.lineTo(groundPad[1].x, groundPad[1].y);
-  ctx.lineTo(groundPad[2].x, groundPad[2].y);
-  ctx.lineTo(groundPad[3].x, groundPad[3].y);
+  ctx.moveTo(groundCorners[0].x, groundCorners[0].y);
+  ctx.lineTo(groundCorners[1].x, groundCorners[1].y);
+  ctx.lineTo(groundCorners[2].x, groundCorners[2].y);
+  ctx.lineTo(groundCorners[3].x, groundCorners[3].y);
   ctx.closePath();
   ctx.fill();
-  ctx.strokeStyle = '#1e293b';
+  ctx.strokeStyle = isLight ? '#cbd5e1' : '#1e3a5f';
+  ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // 2. Main Data Hall Building (White Space Envelope)
-  const isWhiteSelected = selectedZone === 'white_space';
-  const hallTop = isWhiteSelected ? '#2563eb' : '#1e293b';
-  const hallLeft = isWhiteSelected ? '#1d4ed8' : '#0f172a';
-  const hallRight = isWhiteSelected ? '#3b82f6' : '#334155';
-  drawIsoBox(0, -60, 0, 140, 150, 48, hallTop, hallLeft, hallRight, isWhiteSelected);
+  // Perimeter Service Road
+  const roadCorners = [
+    toIso(-150, -120, 0),
+    toIso(245, -120, 0),
+    toIso(245, 170, 0),
+    toIso(-150, 170, 0)
+  ];
+  ctx.strokeStyle = isLight ? 'rgba(71, 85, 105, 0.45)' : 'rgba(148, 163, 184, 0.25)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([8, 8]);
+  ctx.beginPath();
+  ctx.moveTo(roadCorners[0].x, roadCorners[0].y);
+  ctx.lineTo(roadCorners[1].x, roadCorners[1].y);
+  ctx.lineTo(roadCorners[2].x, roadCorners[2].y);
+  ctx.lineTo(roadCorners[3].x, roadCorners[3].y);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
 
-  // Data Hall Roof Details (Liquid cooling manifolds / skylights)
-  for (let i = 0; i < 4; i++) {
-    const rx = 15 + i * 28;
-    drawIsoBox(rx, -45, 48, 16, 120, 4, '#475569', '#334155', '#64748b', false);
-  }
+  // Inner Concrete Foundation Slab
+  const slabCorners = [
+    toIso(-135, -105, 0),
+    toIso(230, -105, 0),
+    toIso(230, 155, 0),
+    toIso(-135, 155, 0)
+  ];
+  ctx.fillStyle = isLight ? '#f1f5f9' : '#0f172a';
+  ctx.beginPath();
+  ctx.moveTo(slabCorners[0].x, slabCorners[0].y);
+  ctx.lineTo(slabCorners[1].x, slabCorners[1].y);
+  ctx.lineTo(slabCorners[2].x, slabCorners[2].y);
+  ctx.lineTo(slabCorners[3].x, slabCorners[3].y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = isLight ? '#94a3b8' : '#334155';
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
 
-  // 3. High Voltage Substation Yard
+  // 2. High Voltage Substation Yard
   const isSubSelected = selectedZone === 'substation';
-  drawIsoBox(-120, -90, 0, 80, 70, 12, isSubSelected ? '#1e3a8a' : '#172554', '#0f172a', '#1e293b', isSubSelected);
-  // Transformers inside substation
-  for (let t = 0; t < 3; t++) {
-    drawIsoBox(-105 + t * 24, -75, 12, 16, 18, 18, '#3b82f6', '#1d4ed8', '#60a5fa', false);
-  }
+  const subYardTop = isLight
+    ? (isSubSelected ? '#bfdbfe' : '#e2e8f0')
+    : (isSubSelected ? '#1e3a8a' : '#111e38');
+  const subYardLeft = isLight
+    ? (isSubSelected ? '#93c5fd' : '#cbd5e1')
+    : (isSubSelected ? '#172554' : '#0b1324');
+  const subYardRight = isLight
+    ? (isSubSelected ? '#60a5fa' : '#dbeafe')
+    : (isSubSelected ? '#2563eb' : '#1c2d52');
+  drawIsoBox(-125, -95, 0, 85, 75, 8, subYardTop, subYardLeft, subYardRight, isSubSelected);
 
-  // 4. BTM Microgrid & BESS Yard
-  const isBtmSelected = selectedZone === 'btm';
-  drawIsoBox(-120, 10, 0, 80, 110, 10, isBtmSelected ? '#581c87' : '#31104b', '#1e0c33', '#4a1575', isBtmSelected);
-  // Turbines or Recip engines
-  if (config.btmPower !== 'grid_only') {
-    for (let g = 0; g < 2; g++) {
-      drawIsoBox(-105 + g * 35, 30, 10, 24, 30, 22, '#a855f7', '#7e22ce', '#c084fc', false);
+  // Substation Security Perimeter Fence Posts & Yellow Line
+  const subFence = [
+    toIso(-125, -95, 8),
+    toIso(-40, -95, 8),
+    toIso(-40, -20, 8),
+    toIso(-125, -20, 8)
+  ];
+  ctx.strokeStyle = isLight ? '#ca8a04' : '#eab308';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath();
+  ctx.moveTo(subFence[0].x, subFence[0].y);
+  ctx.lineTo(subFence[1].x, subFence[1].y);
+  ctx.lineTo(subFence[2].x, subFence[2].y);
+  ctx.lineTo(subFence[3].x, subFence[3].y);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Substation Power Step-Down Transformers
+  for (let t = 0; t < 3; t++) {
+    const tx = -112 + t * 26;
+    const ty = -80;
+    // Transformer main body
+    drawIsoBox(tx, ty, 8, 18, 20, 20, '#3b82f6', '#1d4ed8', '#60a5fa', false, false);
+    // Transformer cooling radiator fin attachments
+    drawIsoBox(tx + 2, ty - 4, 8, 14, 4, 16, '#2563eb', '#1e40af', '#3b82f6', false, false);
+    // Ceramic High-Voltage Bushing terminals on top
+    for (let b = 0; b < 2; b++) {
+      const bx = tx + 4 + b * 8;
+      drawIsoBox(bx, ty + 8, 28, 4, 4, 8, '#f8fafc', '#94a3b8', '#cbd5e1', false, false);
     }
   }
-  // BESS Containers
+
+  // 3. Behind-The-Meter (BTM) Generation & BESS Yard
+  const isBtmSelected = selectedZone === 'btm';
+  const btmYardTop = isLight
+    ? (isBtmSelected ? '#e9d5ff' : '#f3e8ff')
+    : (isBtmSelected ? '#581c87' : '#231138');
+  const btmYardLeft = isLight
+    ? (isBtmSelected ? '#d8b4fe' : '#e9d5ff')
+    : (isBtmSelected ? '#3b0764' : '#140822');
+  const btmYardRight = isLight
+    ? (isBtmSelected ? '#c084fc' : '#fae8ff')
+    : (isBtmSelected ? '#7e22ce' : '#391c5a');
+  drawIsoBox(-125, 5, 0, 85, 115, 8, btmYardTop, btmYardLeft, btmYardRight, isBtmSelected);
+
+  // Gas Turbines / Recip Engines
+  if (config.btmPower !== 'grid_only') {
+    for (let g = 0; g < 2; g++) {
+      const gx = -110 + g * 38;
+      // Turbine Enclosure
+      drawIsoBox(gx, 22, 8, 28, 34, 22, '#a855f7', '#6b21a8', '#c084fc', false, false);
+      // Dual Vertical Exhaust Stacks
+      drawIsoBox(gx + 18, 32, 30, 6, 6, 16, '#94a3b8', '#64748b', '#cbd5e1', false, false);
+      drawIsoBox(gx + 18, 44, 30, 6, 6, 16, '#94a3b8', '#64748b', '#cbd5e1', false, false);
+    }
+  }
+
+  // BESS Battery Energy Storage Container Units (LFP)
   for (let b = 0; b < 3; b++) {
-    drawIsoBox(-108 + b * 24, 80, 10, 18, 25, 14, '#10b981', '#047857', '#34d399', false);
+    const bx = -112 + b * 26;
+    drawIsoBox(bx, 82, 8, 20, 28, 16, '#10b981', '#047857', '#34d399', false, false);
+    // Green Battery Status Indicator Bar on Container front
+    const pLed = toIso(bx + 18, 86, 20);
+    ctx.fillStyle = '#34d399';
+    ctx.shadowColor = '#34d399';
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(pLed.x, pLed.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
   }
 
-  // 5. Heat Rejection Farm (Dry Coolers / Cooling Towers)
+  // 4. Main AI Data Hall Building (The Hero White Space Envelope)
+  const isWhiteSelected = selectedZone === 'white_space';
+  const hallTop = isLight
+    ? (isWhiteSelected ? '#1d4ed8' : '#334155')
+    : (isWhiteSelected ? '#1e40af' : '#1e293b');
+  const hallLeft = isLight
+    ? (isWhiteSelected ? '#1e3a8a' : '#1e293b')
+    : (isWhiteSelected ? '#0f172a' : '#0c1322');
+  const hallRight = isLight
+    ? (isWhiteSelected ? '#2563eb' : '#475569')
+    : (isWhiteSelected ? '#2563eb' : '#27354a');
+  drawIsoBox(0, -60, 0, 145, 155, 52, hallTop, hallLeft, hallRight, isWhiteSelected);
+
+  // Exterior Architectural Clerestory Windows with Glowing Server Hall Blue
+  const pulseAlpha = 0.5 + Math.sin(pulse * 0.4) * 0.25;
+  for (let w = 0; w < 4; w++) {
+    const wx = 12 + w * 32;
+    // Illuminated window strip
+    ctx.save();
+    ctx.fillStyle = `rgba(56, 189, 248, ${pulseAlpha})`;
+    ctx.shadowColor = '#38bdf8';
+    ctx.shadowBlur = 10;
+    const w1 = toIso(wx, -60.2, 28);
+    const w2 = toIso(wx + 22, -60.2, 28);
+    const w3 = toIso(wx + 22, -60.2, 38);
+    const w4 = toIso(wx, -60.2, 38);
+    ctx.beginPath();
+    ctx.moveTo(w1.x, w1.y);
+    ctx.lineTo(w2.x, w2.y);
+    ctx.lineTo(w3.x, w3.y);
+    ctx.lineTo(w4.x, w4.y);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Rooftop Parapet Rim & Manifold Pods
+  for (let i = 0; i < 4; i++) {
+    const rx = 18 + i * 30;
+    // Rooftop CDU / Air Handler penthouse
+    drawIsoBox(rx, -46, 52, 18, 126, 6, '#475569', '#334155', '#64748b', false, false);
+    // Rooftop Piping Runs
+    drawIsoBox(rx + 5, -42, 58, 8, 118, 3, '#0284c7', '#0369a1', '#38bdf8', false, false);
+  }
+
+  // 5. Heat Rejection Farm (Adiabatic Dry Coolers / Cooling Towers)
   const isCoolSelected = selectedZone === 'cooling';
-  drawIsoBox(165, -60, 0, 50, 150, 8, isCoolSelected ? '#065f46' : '#042f2e', '#022120', '#0d4e48', isCoolSelected);
-  // Dry Cooler Banks
+  const coolYardTop = isLight
+    ? (isCoolSelected ? '#99f6e4' : '#ccfbf1')
+    : (isCoolSelected ? '#065f46' : '#082f2c');
+  const coolYardLeft = isLight
+    ? (isCoolSelected ? '#5eead4' : '#99f6e4')
+    : (isCoolSelected ? '#022c29' : '#031715');
+  const coolYardRight = isLight
+    ? (isCoolSelected ? '#2dd4bf' : '#e6fffa')
+    : (isCoolSelected ? '#0d9488' : '#0d4e48');
+  drawIsoBox(170, -60, 0, 55, 155, 8, coolYardTop, coolYardLeft, coolYardRight, isCoolSelected);
+
+  // Dry Cooler Cells with Animated Rotating Fans
   for (let c = 0; c < 5; c++) {
-    const cy = -45 + c * 26;
-    drawIsoBox(170, cy, 8, 38, 18, 16, '#0d9488', '#0f766e', '#14b8a6', false);
+    const cy = -46 + c * 28;
+    drawIsoBox(175, cy, 8, 44, 20, 18, '#0f766e', '#115e59', '#14b8a6', false, false);
+
+    // Fan Cowls with animated rotation
+    const fanCenter = toIso(197, cy + 10, 26);
+    ctx.save();
+    ctx.strokeStyle = isLight ? '#0d9488' : '#2dd4bf';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.ellipse(fanCenter.x, fanCenter.y, 10, 5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Rotating blades
+    ctx.strokeStyle = isLight ? '#14b8a6' : '#5eead4';
+    ctx.lineWidth = 1.5;
+    for (let b = 0; b < 3; b++) {
+      const angle = fanRotation + (b * Math.PI * 2) / 3;
+      const bx = fanCenter.x + Math.cos(angle) * 8;
+      const by = fanCenter.y + Math.sin(angle) * 4;
+      ctx.beginPath();
+      ctx.moveTo(fanCenter.x, fanCenter.y);
+      ctx.lineTo(bx, by);
+      ctx.stroke();
+    }
+    ctx.restore();
   }
 
-  // 6. Animated Power Interconnect Traces (Substation -> Hall)
-  const pSub = toIso(-40, -40, 12);
-  const pHallPwr = toIso(0, -30, 20);
+  // 6. Glowing Animated Power Conduits (Yellow/Amber Pulse)
+  const pSub = toIso(-40, -42, 10);
+  const pHallPwr = toIso(0, -32, 22);
 
-  ctx.strokeStyle = '#facc15';
-  ctx.lineWidth = 2.5;
-  ctx.setLineDash([8, 8]);
-  ctx.lineDashOffset = -pulse;
+  ctx.save();
+  ctx.strokeStyle = isLight ? 'rgba(217, 119, 6, 0.4)' : 'rgba(234, 179, 8, 0.4)';
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(pSub.x, pSub.y);
   ctx.lineTo(pHallPwr.x, pHallPwr.y);
   ctx.stroke();
 
-  // 7. Animated Coolant Pipe Traces (Data Hall -> Cooling Farm)
-  const pHallCool = toIso(140, 20, 15);
-  const pCoolFarm = toIso(165, 20, 15);
+  // Glowing traveling power particles
+  ctx.strokeStyle = isLight ? '#b45309' : '#fef08a';
+  ctx.shadowColor = isLight ? '#d97706' : '#eab308';
+  ctx.shadowBlur = 10;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([8, 14]);
+  ctx.lineDashOffset = -pulse;
+  ctx.beginPath();
+  ctx.moveTo(pSub.x, pSub.y);
+  ctx.lineTo(pHallPwr.x, pHallPwr.y);
+  ctx.stroke();
+  ctx.restore();
 
-  ctx.strokeStyle = '#06b6d4';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([6, 6]);
+  // 7. Glowing Animated Coolant Fluid Conduits (Cyan Supply / Return)
+  const pHallCoolSupply = toIso(145, 15, 18);
+  const pCoolFarmSupply = toIso(170, 15, 18);
+
+  const pHallCoolReturn = toIso(145, 45, 18);
+  const pCoolFarmReturn = toIso(170, 45, 18);
+
+  ctx.save();
+  // Supply loop
+  ctx.strokeStyle = isLight ? '#0284c7' : '#06b6d4';
+  ctx.shadowColor = isLight ? '#38bdf8' : '#22d3ee';
+  ctx.shadowBlur = 8;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([7, 10]);
   ctx.lineDashOffset = pulse;
   ctx.beginPath();
-  ctx.moveTo(pHallCool.x, pHallCool.y);
-  ctx.lineTo(pCoolFarm.x, pCoolFarm.y);
+  ctx.moveTo(pHallCoolSupply.x, pHallCoolSupply.y);
+  ctx.lineTo(pCoolFarmSupply.x, pCoolFarmSupply.y);
   ctx.stroke();
 
-  // Reset line dash
-  ctx.setLineDash([]);
+  // Return loop
+  ctx.strokeStyle = isLight ? '#1d4ed8' : '#3b82f6';
+  ctx.shadowColor = isLight ? '#60a5fa' : '#60a5fa';
+  ctx.shadowBlur = 6;
+  ctx.lineWidth = 2.5;
+  ctx.setLineDash([7, 10]);
+  ctx.lineDashOffset = -pulse;
+  ctx.beginPath();
+  ctx.moveTo(pHallCoolReturn.x, pHallCoolReturn.y);
+  ctx.lineTo(pCoolFarmReturn.x, pCoolFarmReturn.y);
+  ctx.stroke();
+  ctx.restore();
 
-  // Labels
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 11px sans-serif';
-  const subLabelPos = toIso(-80, -95, 22);
-  ctx.fillText('SUBSTATION YARD', subLabelPos.x - 45, subLabelPos.y);
+  // 8. Architectural Perspective Sector Badges & Labels
+  ctx.save();
+  // Substation
+  const subLabelPos = toIso(-80, -98, 26);
+  drawTechTag(ctx, subLabelPos.x, subLabelPos.y, 'HV SUBSTATION', `${calc.facilityTotalLoadMW} MVA`, '#3b82f6', isLight);
 
-  const hallLabelPos = toIso(70, -65, 55);
-  ctx.fillText(`AI DATA HALL (${calc.rackDensityKW} kW/rack)`, hallLabelPos.x - 60, hallLabelPos.y);
+  // AI Data Hall
+  const hallLabelPos = toIso(72, -62, 62);
+  drawTechTag(ctx, hallLabelPos.x, hallLabelPos.y, `AI DATA HALL`, `${calc.totalRacks} RACKS · ${calc.rackDensityKW} kW`, isLight ? '#0284c7' : '#38bdf8', isLight);
 
-  const coolLabelPos = toIso(185, -65, 28);
-  ctx.fillText('HEAT REJECTION', coolLabelPos.x - 45, coolLabelPos.y);
+  // Heat Rejection
+  const coolLabelPos = toIso(198, -62, 34);
+  drawTechTag(ctx, coolLabelPos.x, coolLabelPos.y, 'HEAT REJECTION', `${calc.heatDissipationTons.toLocaleString()} TONS`, isLight ? '#0d9488' : '#14b8a6', isLight);
+
+  // BTM Generation
+  const btmLabelPos = toIso(-80, 8, 22);
+  drawTechTag(ctx, btmLabelPos.x, btmLabelPos.y, 'BTM & BESS', `${config.btmPower.toUpperCase()}`, isLight ? '#7e22ce' : '#a855f7', isLight);
+  ctx.restore();
 }
+
+// Tech Callout Tag Helper
+function drawTechTag(
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  title: string,
+  subtitle: string,
+  accentColor: string,
+  isLight: boolean
+) {
+  ctx.save();
+  ctx.font = 'bold 9px monospace';
+  const titleWidth = ctx.measureText(title).width;
+  ctx.font = '8px monospace';
+  const subWidth = ctx.measureText(subtitle).width;
+  const boxWidth = Math.max(titleWidth, subWidth) + 16;
+  const boxHeight = 24;
+
+  const bx = x - boxWidth / 2;
+  const by = y - boxHeight / 2;
+
+  // Drop shadow
+  ctx.shadowColor = isLight ? 'rgba(15, 23, 42, 0.14)' : 'rgba(0, 0, 0, 0.5)';
+  ctx.shadowBlur = isLight ? 6 : 4;
+  ctx.shadowOffsetY = isLight ? 2 : 1;
+
+  // Background
+  ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.94)' : 'rgba(15, 23, 42, 0.88)';
+  ctx.strokeStyle = accentColor;
+  ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  ctx.roundRect(bx, by, boxWidth, boxHeight, 4);
+  ctx.fill();
+  ctx.stroke();
+
+  // Reset shadow for text
+  ctx.shadowColor = 'transparent';
+
+  // Texts
+  ctx.fillStyle = isLight ? '#0f172a' : '#ffffff';
+  ctx.font = 'bold 9px monospace';
+  ctx.fillText(title, bx + 8, by + 10);
+  ctx.fillStyle = accentColor;
+  ctx.font = '8px monospace';
+  ctx.fillText(subtitle, bx + 8, by + 20);
+  ctx.restore();
+}
+
+// --- 2D SITE PLAN BLUEPRINT ROUTINE ---
 
 function renderTopDownSitePlan(
   ctx: CanvasRenderingContext2D,
@@ -417,129 +833,186 @@ function renderTopDownSitePlan(
   config: DataCenterConfig,
   calc: EngineeringCalculation,
   pulse: number,
-  selectedZone: string | null
+  fanRotation: number,
+  selectedZone: string | null,
+  isLight: boolean
 ) {
-  // 1. Data Center Main Envelope (Data Hall)
-  const hallX = 260, hallY = 70, hallW = 380, hallH = 300;
+  // Main Data Hall Dimensions
+  const hallX = 265, hallY = 65, hallW = 390, hallH = 310;
   const isHallSel = selectedZone === 'white_space';
 
-  ctx.fillStyle = isHallSel ? '#1e293b' : '#111827';
-  ctx.strokeStyle = isHallSel ? '#60a5fa' : '#334155';
+  // White Space Envelope
+  ctx.save();
+  ctx.fillStyle = isLight
+    ? (isHallSel ? '#e2e8f0' : '#ffffff')
+    : (isHallSel ? '#1e293b' : '#0f172a');
+  ctx.strokeStyle = isLight
+    ? (isHallSel ? '#2563eb' : '#94a3b8')
+    : (isHallSel ? '#60a5fa' : '#334155');
   ctx.lineWidth = 2;
   ctx.fillRect(hallX, hallY, hallW, hallH);
   ctx.strokeRect(hallX, hallY, hallW, hallH);
 
-  // Draw Rack Lineups
+  // Dimension lines & architectural markers
+  ctx.strokeStyle = isLight ? 'rgba(71, 85, 105, 0.4)' : 'rgba(148, 163, 184, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([3, 3]);
+  ctx.beginPath();
+  ctx.moveTo(hallX, hallY - 14);
+  ctx.lineTo(hallX + hallW, hallY - 14);
+  ctx.moveTo(hallX + hallW + 14, hallY);
+  ctx.lineTo(hallX + hallW + 14, hallY + hallH);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
+  ctx.font = '9px monospace';
+  ctx.fillText("380'-0\" WHITE SPACE SPAN", hallX + hallW / 2 - 65, hallY - 18);
+
+  // Server Rack Arrays (Hot Aisle / Cold Aisle pods)
   const rows = 7;
   const cols = 12;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const rx = hallX + 30 + c * 27;
-      const ry = hallY + 35 + r * 36;
+      const rx = hallX + 32 + c * 27;
+      const ry = hallY + 38 + r * 37;
       ctx.fillStyle = config.coolingLoop === 'air_hvac' ? '#475569' : '#0284c7';
-      ctx.fillRect(rx, ry, 18, 22);
+      ctx.fillRect(rx, ry, 19, 23);
+
+      // Blinking rack activity LED
+      ctx.fillStyle = (r + c + Math.floor(pulse / 4)) % 3 === 0 ? '#38bdf8' : '#0369a1';
+      ctx.fillRect(rx + 2, ry + 2, 4, 3);
     }
   }
 
-  // CDU Pump Lineup along interior wall
+  // CDU Distribution Lineup
   for (let cdu = 0; cdu < 6; cdu++) {
+    const cduY = hallY + 38 + cdu * 43;
     ctx.fillStyle = '#0d9488';
-    ctx.fillRect(hallX + hallW - 22, hallY + 35 + cdu * 42, 14, 28);
+    ctx.fillRect(hallX + hallW - 24, cduY, 15, 28);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '7px monospace';
+    ctx.fillText('CDU', hallX + hallW - 22, cduY + 16);
   }
 
-  // Hall label
-  ctx.fillStyle = '#f8fafc';
+  // Hall Title & Engineering Specs
+  ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
   ctx.font = 'bold 12px sans-serif';
-  ctx.fillText(`WHITE SPACE: ${calc.totalRacks} RACKS · ${config.gpuType.toUpperCase()}`, hallX + 24, hallY - 12);
+  ctx.fillText(`COMPUTE WHITE SPACE: ${calc.totalRacks} RACKS · ${config.gpuType.toUpperCase()}`, hallX + 24, hallY + 22);
   ctx.font = '10px monospace';
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText(`800V DC BUSWAY · D2C MANIFOLD · ${calc.whiteSpaceSqFt.toLocaleString()} SQ FT`, hallX + 24, hallY + hallH - 12);
+  ctx.fillStyle = isLight ? '#0284c7' : '#38bdf8';
+  ctx.fillText(`${config.serverPower === '800vdc' ? '800V DC BUSWAY' : '480V AC BUS'} · ${calc.whiteSpaceSqFt.toLocaleString()} SQ FT · ${calc.rackDensityKW} kW/RACK`, hallX + 24, hallY + hallH - 12);
+  ctx.restore();
 
   // 2. High Voltage Substation Yard
-  const subX = 35, subY = 70, subW = 180, subH = 135;
+  const subX = 35, subY = 65, subW = 190, subH = 140;
   const isSubSel = selectedZone === 'substation';
-  ctx.fillStyle = isSubSel ? '#172554' : '#0f172a';
-  ctx.strokeStyle = isSubSel ? '#60a5fa' : '#1d4ed8';
+  ctx.save();
+  ctx.fillStyle = isLight ? (isSubSel ? '#dbeafe' : '#eff6ff') : (isSubSel ? '#172554' : '#0b1329');
+  ctx.strokeStyle = isLight ? '#3b82f6' : (isSubSel ? '#60a5fa' : '#1d4ed8');
+  ctx.lineWidth = 1.5;
   ctx.fillRect(subX, subY, subW, subH);
   ctx.strokeRect(subX, subY, subW, subH);
 
-  ctx.fillStyle = '#93c5fd';
+  ctx.fillStyle = isLight ? '#1e40af' : '#93c5fd';
   ctx.font = 'bold 11px sans-serif';
   ctx.fillText('HV SUBSTATION YARD', subX + 14, subY + 22);
   ctx.font = '9px monospace';
-  ctx.fillStyle = '#cbd5e1';
-  ctx.fillText(`115kV/34.5kV [${config.transformerType.toUpperCase()}]`, subX + 14, subY + 40);
-  ctx.fillText(`Utility Cap: ${calc.facilityTotalLoadMW} MVA`, subX + 14, subY + 56);
+  ctx.fillStyle = isLight ? '#475569' : '#cbd5e1';
+  ctx.fillText(`115kV/34.5kV [${config.transformerType.toUpperCase()}]`, subX + 14, subY + 38);
+  ctx.fillText(`Utility Cap: ${calc.facilityTotalLoadMW} MVA`, subX + 14, subY + 52);
 
-  // Draw transformer blocks
+  // Transformers
   for (let t = 0; t < 3; t++) {
+    const tx = subX + 16 + t * 56;
+    const ty = subY + 70;
     ctx.fillStyle = '#2563eb';
-    ctx.fillRect(subX + 14 + t * 52, subY + 74, 42, 42);
+    ctx.fillRect(tx, ty, 46, 46);
+    ctx.strokeStyle = '#60a5fa';
+    ctx.strokeRect(tx, ty, 46, 46);
     ctx.fillStyle = '#ffffff';
-    ctx.font = '8px monospace';
-    ctx.fillText(`TX-${t + 1}`, subX + 24 + t * 52, subY + 98);
+    ctx.font = 'bold 9px monospace';
+    ctx.fillText(`TX-${t + 1}`, tx + 12, ty + 26);
   }
+  ctx.restore();
 
-  // 3. Behind-The-Meter Power & BESS Yard
-  const btmX = 35, btmY = 230, btmW = 180, btmH = 140;
+  // 3. BTM Generation & BESS Yard
+  const btmX = 35, btmY = 230, btmW = 190, btmH = 145;
   const isBtmSel = selectedZone === 'btm';
-  ctx.fillStyle = isBtmSel ? '#3b0764' : '#180728';
-  ctx.strokeStyle = isBtmSel ? '#c084fc' : '#7e22ce';
+  ctx.save();
+  ctx.fillStyle = isLight ? (isBtmSel ? '#f3e8ff' : '#faf5ff') : (isBtmSel ? '#3b0764' : '#180728');
+  ctx.strokeStyle = isLight ? '#a855f7' : (isBtmSel ? '#c084fc' : '#7e22ce');
+  ctx.lineWidth = 1.5;
   ctx.fillRect(btmX, btmY, btmW, btmH);
   ctx.strokeRect(btmX, btmY, btmW, btmH);
 
-  ctx.fillStyle = '#e9d5ff';
+  ctx.fillStyle = isLight ? '#6b21a8' : '#e9d5ff';
   ctx.font = 'bold 11px sans-serif';
   ctx.fillText('BTM GENERATION & BESS', btmX + 14, btmY + 22);
   ctx.font = '9px monospace';
-  ctx.fillStyle = '#cbd5e1';
-  ctx.fillText(`Gen: ${config.btmPower.toUpperCase()}`, btmX + 14, btmY + 40);
-  ctx.fillText(`Storage: ${config.bessType.toUpperCase()}`, btmX + 14, btmY + 56);
+  ctx.fillStyle = isLight ? '#475569' : '#cbd5e1';
+  ctx.fillText(`Gen: ${config.btmPower.toUpperCase()} · ${config.bessType.toUpperCase()}`, btmX + 14, btmY + 38);
 
-  // Turbine / Engine skids
+  // Turbine Skid & BESS
   ctx.fillStyle = '#9333ea';
-  ctx.fillRect(btmX + 14, btmY + 70, 70, 50);
+  ctx.fillRect(btmX + 14, btmY + 56, 75, 68);
   ctx.fillStyle = '#10b981';
-  ctx.fillRect(btmX + 96, btmY + 70, 70, 50);
+  ctx.fillRect(btmX + 100, btmY + 56, 75, 68);
   ctx.fillStyle = '#ffffff';
-  ctx.font = '8px monospace';
-  ctx.fillText('TURBINE', btmX + 28, btmY + 98);
-  ctx.fillText('BESS LFP', btmX + 108, btmY + 98);
+  ctx.font = 'bold 8px monospace';
+  ctx.fillText('TURBINE', btmX + 26, btmY + 94);
+  ctx.fillText('BESS LFP', btmX + 112, btmY + 94);
+  ctx.restore();
 
-  // 4. Heat Rejection Plant
-  const coolX = 680, coolY = 70, coolW = 200, coolH = 300;
+  // 4. Heat Rejection Farm
+  const coolX = 690, coolY = 65, coolW = 195, coolH = 310;
   const isCoolSel = selectedZone === 'cooling';
-  ctx.fillStyle = isCoolSel ? '#042f2e' : '#021817';
-  ctx.strokeStyle = isCoolSel ? '#2dd4bf' : '#0f766e';
+  ctx.save();
+  ctx.fillStyle = isLight ? (isCoolSel ? '#ccfbf1' : '#f0fdfa') : (isCoolSel ? '#042f2e' : '#031918');
+  ctx.strokeStyle = isLight ? '#0f766e' : (isCoolSel ? '#2dd4bf' : '#0f766e');
+  ctx.lineWidth = 1.5;
   ctx.fillRect(coolX, coolY, coolW, coolH);
   ctx.strokeRect(coolX, coolY, coolW, coolH);
 
-  ctx.fillStyle = '#5eead4';
+  ctx.fillStyle = isLight ? '#0f766e' : '#5eead4';
   ctx.font = 'bold 11px sans-serif';
-  ctx.fillText('HEAT REJECTION FARM', coolX + 16, coolY + 24);
+  ctx.fillText('HEAT REJECTION FARM', coolX + 16, coolY + 22);
   ctx.font = '9px monospace';
-  ctx.fillStyle = '#cbd5e1';
-  ctx.fillText(config.rejectionPlant.toUpperCase(), coolX + 16, coolY + 42);
-  ctx.fillText(`Dissipation: ${calc.heatDissipationTons.toLocaleString()} Tons`, coolX + 16, coolY + 58);
+  ctx.fillStyle = isLight ? '#475569' : '#cbd5e1';
+  ctx.fillText(`${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} TONS`, coolX + 16, coolY + 38);
 
-  // Cooler Banks with spinning fan visualizers
+  // Cooler Banks with Animated Fans
   for (let i = 0; i < 5; i++) {
-    const by = coolY + 75 + i * 42;
-    ctx.fillStyle = '#134e4a';
-    ctx.fillRect(coolX + 16, by, 168, 30);
+    const by = coolY + 58 + i * 48;
+    ctx.fillStyle = isLight ? '#0d9488' : '#134e4a';
+    ctx.fillRect(coolX + 14, by, 168, 38);
 
-    // Fans
     for (let f = 0; f < 3; f++) {
-      const fx = coolX + 45 + f * 50;
+      const fx = coolX + 42 + f * 52;
+      const fy = by + 19;
       ctx.fillStyle = '#2dd4bf';
       ctx.beginPath();
-      ctx.arc(fx, by + 15, 8, 0, Math.PI * 2);
+      ctx.arc(fx, fy, 11, 0, Math.PI * 2);
       ctx.fill();
+
+      // Fan blade motion
+      ctx.strokeStyle = '#0f766e';
+      ctx.lineWidth = 2;
+      for (let b = 0; b < 4; b++) {
+        const angle = fanRotation + (b * Math.PI) / 2;
+        ctx.beginPath();
+        ctx.moveTo(fx, fy);
+        ctx.lineTo(fx + Math.cos(angle) * 9, fy + Math.sin(angle) * 9);
+        ctx.stroke();
+      }
     }
   }
+  ctx.restore();
 
-  // 5. Connecting Flow Traces
-  ctx.strokeStyle = '#eab308';
+  // 5. Interconnect Buses with Animated Pulse
+  ctx.save();
+  // Power bus
+  ctx.strokeStyle = isLight ? '#d97706' : '#eab308';
   ctx.lineWidth = 3;
   ctx.setLineDash([8, 8]);
   ctx.lineDashOffset = -pulse;
@@ -549,7 +1022,7 @@ function renderTopDownSitePlan(
   ctx.stroke();
 
   // Coolant supply & return
-  ctx.strokeStyle = '#06b6d4';
+  ctx.strokeStyle = isLight ? '#0284c7' : '#06b6d4';
   ctx.lineWidth = 3;
   ctx.setLineDash([6, 6]);
   ctx.lineDashOffset = pulse;
@@ -559,8 +1032,10 @@ function renderTopDownSitePlan(
   ctx.moveTo(hallX + hallW, 260);
   ctx.lineTo(coolX, 260);
   ctx.stroke();
-  ctx.setLineDash([]);
+  ctx.restore();
 }
+
+// --- THERMAL FLIR SIMULATION ROUTINE ---
 
 function renderThermalHeatmap(
   ctx: CanvasRenderingContext2D,
@@ -568,82 +1043,119 @@ function renderThermalHeatmap(
   h: number,
   config: DataCenterConfig,
   calc: EngineeringCalculation,
-  pulse: number
+  pulse: number,
+  isLight: boolean
 ) {
-  // Dark thermal background
-  ctx.fillStyle = '#030712';
+  // Thermographic background
+  ctx.fillStyle = isLight ? '#f8fafc' : '#02040a';
   ctx.fillRect(0, 0, w, h);
 
-  // Gradient heat halos
-  const hallX = 450, hallY = 220;
+  const hallX = 460, hallY = 220;
 
-  // Compute Hall Heat Radial Gradient (Peak 45°C - 60°C core)
-  const maxThermalRadius = config.coolingLoop === 'air_hvac' ? 240 : 160;
-  const gradient = ctx.createRadialGradient(hallX, hallY, 20, hallX, hallY, maxThermalRadius);
+  // High-Density Core Heat Dissipation Radial Gradient
+  const maxThermalRadius = config.coolingLoop === 'air_hvac' ? 250 : 170;
+  const gradient = ctx.createRadialGradient(hallX, hallY, 15, hallX, hallY, maxThermalRadius);
   if (config.coolingLoop === 'air_hvac') {
-    // Severe thermal runaway heat signature
-    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.85)'); // Hot red
-    gradient.addColorStop(0.3, 'rgba(249, 115, 22, 0.7)'); // Orange
-    gradient.addColorStop(0.6, 'rgba(234, 179, 8, 0.4)'); // Yellow
+    // Air cooling bottleneck thermal spread
+    gradient.addColorStop(0, 'rgba(239, 68, 68, 0.95)');
+    gradient.addColorStop(0.35, 'rgba(249, 115, 22, 0.8)');
+    gradient.addColorStop(0.65, 'rgba(234, 179, 8, 0.45)');
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
   } else {
-    // Controlled direct-to-chip heat signature
-    gradient.addColorStop(0, 'rgba(249, 115, 22, 0.75)'); // Controlled core heat
-    gradient.addColorStop(0.4, 'rgba(59, 130, 246, 0.4)'); // Fast coolant absorption
-    gradient.addColorStop(0.8, 'rgba(16, 185, 129, 0.2)'); // Liquid return
+    // Direct-to-chip controlled liquid heat extraction
+    gradient.addColorStop(0, 'rgba(249, 115, 22, 0.85)');
+    gradient.addColorStop(0.3, 'rgba(234, 179, 8, 0.5)');
+    gradient.addColorStop(0.6, 'rgba(6, 182, 212, 0.35)');
     gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
   }
 
+  ctx.save();
   ctx.fillStyle = gradient;
   ctx.beginPath();
   ctx.arc(hallX, hallY, maxThermalRadius, 0, Math.PI * 2);
   ctx.fill();
 
-  // Substation transformer thermal spots
+  // Transformer Heat Hotspots
   for (let i = 0; i < 3; i++) {
-    const tx = 130;
-    const ty = 120 + i * 40;
-    const gTx = ctx.createRadialGradient(tx, ty, 5, tx, ty, 45);
-    gTx.addColorStop(0, 'rgba(249, 115, 22, 0.8)');
+    const tx = 135;
+    const ty = 125 + i * 44;
+    const gTx = ctx.createRadialGradient(tx, ty, 6, tx, ty, 50);
+    gTx.addColorStop(0, 'rgba(249, 115, 22, 0.85)');
+    gTx.addColorStop(0.6, 'rgba(234, 179, 8, 0.3)');
     gTx.addColorStop(1, 'rgba(0, 0, 0, 0)');
     ctx.fillStyle = gTx;
     ctx.beginPath();
-    ctx.arc(tx, ty, 45, 0, Math.PI * 2);
+    ctx.arc(tx, ty, 50, 0, Math.PI * 2);
     ctx.fill();
   }
 
-  // Heat Rejection Dry Coolers (Exhaust heat plume)
-  const coolGradient = ctx.createRadialGradient(780, 220, 20, 780, 220, 140);
-  coolGradient.addColorStop(0, 'rgba(234, 179, 8, 0.6)');
-  coolGradient.addColorStop(0.7, 'rgba(6, 182, 212, 0.3)');
+  // Heat Rejection Thermal Plumes
+  const coolGradient = ctx.createRadialGradient(790, 220, 25, 790, 220, 150);
+  coolGradient.addColorStop(0, 'rgba(234, 179, 8, 0.7)');
+  coolGradient.addColorStop(0.5, 'rgba(16, 185, 129, 0.35)');
   coolGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
   ctx.fillStyle = coolGradient;
   ctx.beginPath();
-  ctx.arc(780, 220, 140, 0, Math.PI * 2);
+  ctx.arc(790, 220, 150, 0, Math.PI * 2);
   ctx.fill();
 
-  // Overlay FLIR Thermographic Legend
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 12px monospace';
-  ctx.fillText('FLIR THERMOGRAPHY SIMULATION [32°C - 78°C]', 30, 35);
-  ctx.font = '10px monospace';
-  ctx.fillStyle = '#94a3b8';
-  ctx.fillText(`Peak Compute Core: ${config.coolingLoop === 'air_hvac' ? '86.4°C [ALERT: CRITICAL]' : '42.8°C [NOMINAL]'}`, 30, 52);
-  ctx.fillText(`Secondary Fluid Delta T: 14.2°C · CDU Primary Flow: ${calc.totalCoolantFlowGPM.toLocaleString()} GPM`, 30, 68);
+  // FLIR Crosshair & Hotspot Tracker
+  const peakTemp = config.coolingLoop === 'air_hvac' ? '88.4°C [CRITICAL ALERT]' : '43.2°C [OPTIMAL]';
+  const crossX = hallX + Math.sin(pulse * 0.1) * 10;
+  const crossY = hallY + Math.cos(pulse * 0.1) * 8;
 
-  // Draw thermal bar scale
-  const barX = 30, barY = 380, barW = 240, barH = 12;
+  ctx.strokeStyle = '#ef4444';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(crossX, crossY, 18, 0, Math.PI * 2);
+  ctx.moveTo(crossX - 25, crossY);
+  ctx.lineTo(crossX + 25, crossY);
+  ctx.moveTo(crossX, crossY - 25);
+  ctx.lineTo(crossX, crossY + 25);
+  ctx.stroke();
+
+  // Hotspot Text Callout
+  ctx.fillStyle = isLight ? '#0f172a' : '#ffffff';
+  ctx.font = 'bold 10px monospace';
+  ctx.fillText(`PEAK JUNCTION: ${peakTemp}`, crossX + 28, crossY - 8);
+  ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
+  ctx.font = '9px monospace';
+  ctx.fillText(`PRIMARY CHIP DELTA T: 14.8°C`, crossX + 28, crossY + 6);
+
+  // FLIR Calibration Legend Overlay
+  ctx.fillStyle = isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.85)';
+  ctx.strokeStyle = isLight ? '#cbd5e1' : 'rgba(148, 163, 184, 0.3)';
+  ctx.beginPath();
+  ctx.roundRect(25, 20, 310, 68, 8);
+  ctx.fill();
+  ctx.stroke();
+
+  ctx.fillStyle = isLight ? '#0f172a' : '#f8fafc';
+  ctx.font = 'bold 11px monospace';
+  ctx.fillText('FLIR RADIOMETRIC THERMOGRAPHY [20°C - 90°C]', 36, 38);
+  ctx.fillStyle = isLight ? '#0284c7' : '#38bdf8';
+  ctx.font = '9px monospace';
+  ctx.fillText(`EMISSIVITY: ε = 0.95 · SENSOR: CALIBRATED UNCOOLED MICROBOLOMETER`, 36, 52);
+  ctx.fillText(`TOTAL FLOW: ${calc.totalCoolantFlowGPM.toLocaleString()} GPM · WUE: ${calc.wue} L/kWh`, 36, 66);
+
+  // Thermal Bar Scale
+  const barX = 25, barY = 385, barW = 280, barH = 12;
   const barGrad = ctx.createLinearGradient(barX, 0, barX + barW, 0);
   barGrad.addColorStop(0, '#3b82f6');
-  barGrad.addColorStop(0.35, '#10b981');
-  barGrad.addColorStop(0.7, '#eab308');
+  barGrad.addColorStop(0.28, '#06b6d4');
+  barGrad.addColorStop(0.55, '#10b981');
+  barGrad.addColorStop(0.78, '#eab308');
   barGrad.addColorStop(1, '#ef4444');
   ctx.fillStyle = barGrad;
-  ctx.fillRect(barX, barY, barW, barH);
-  ctx.fillStyle = '#cbd5e1';
+  ctx.beginPath();
+  ctx.roundRect(barX, barY, barW, barH, 4);
+  ctx.fill();
+
+  ctx.fillStyle = isLight ? '#475569' : '#94a3b8';
   ctx.font = '9px monospace';
   ctx.fillText('20°C', barX, barY + 24);
-  ctx.fillText('40°C', barX + 75, barY + 24);
-  ctx.fillText('60°C', barX + 150, barY + 24);
-  ctx.fillText('85°C+', barX + barW - 25, barY + 24);
+  ctx.fillText('40°C', barX + 80, barY + 24);
+  ctx.fillText('65°C', barX + 165, barY + 24);
+  ctx.fillText('90°C+', barX + barW - 28, barY + 24);
+  ctx.restore();
 }

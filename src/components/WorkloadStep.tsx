@@ -2,7 +2,7 @@ import React from 'react';
 import { ACCELERATOR_SPECS, REGIONAL_DATA } from '../data/constants';
 import { ARCHITECTURE_PRESETS } from '../data/presets';
 import { AcceleratorType, DataCenterConfig, DeploymentRegion, EngineeringCalculation, IngressMode } from '../types/datacenter';
-import { ArrowRight, Cpu, Globe, MapPin, Sparkles, Zap } from 'lucide-react';
+import { ArrowRight, Check, Cpu, Globe, MapPin, Sparkles, Zap } from 'lucide-react';
 
 interface WorkloadStepProps {
   config: DataCenterConfig;
@@ -65,43 +65,103 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
       </div>
 
       {/* Ingress Track Toggle (Interactive Segmented Cards) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <button
           onClick={() => onChangeConfig({ ingressMode: 'top-down' })}
-          className={`p-5 rounded-xl text-left border transition cursor-pointer shadow-xs ${
+          className={`relative p-5 rounded-2xl text-left transition-all duration-100 cursor-pointer select-none group ${
             config.ingressMode === 'top-down'
-              ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500/20'
-              : 'border-slate-200 bg-white hover:border-slate-300'
+              ? 'border-2 border-blue-400 border-b-[7px] border-b-blue-700 bg-gradient-to-b from-blue-50/90 via-sky-50/60 to-blue-100/90 shadow-[0_8px_20px_rgba(37,99,235,0.25),inset_0_1px_0_rgba(255,255,255,0.9)] hover:border-b-[8px] hover:-translate-y-[1px] active:translate-y-[6px] active:border-b-[2px] active:shadow-[0_2px_4px_rgba(37,99,235,0.2)]'
+              : 'border-2 border-slate-300 border-b-[7px] border-b-slate-400 bg-gradient-to-b from-white via-slate-50 to-slate-100 shadow-[0_8px_16px_rgba(0,0,0,0.07),inset_0_1px_0_rgba(255,255,255,0.95)] hover:border-slate-400 hover:border-b-slate-500 hover:border-b-[8px] hover:-translate-y-[1px] active:translate-y-[6px] active:border-b-[2px] active:shadow-[0_2px_4px_rgba(0,0,0,0.06)]'
           }`}
         >
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="font-bold text-sm text-slate-900 flex items-center gap-2">
-              <Cpu className="w-4 h-4 text-blue-600" />
-              Track A: Top-Down (Compute & Cluster Driven)
-            </span>
-            <span className="text-xs text-blue-600 font-medium">Recommended for Neoclouds & AI Labs</span>
+          {/* 3D Specular Highlight Line */}
+          <div className="pointer-events-none absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 rounded-full" />
+
+          <div className="flex items-center justify-between gap-3 mb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-b-[3px] transition-transform duration-100 group-hover:scale-105 ${
+                  config.ingressMode === 'top-down'
+                    ? 'bg-gradient-to-b from-blue-500 to-blue-600 text-white border-blue-400 border-b-blue-800 shadow-[0_2px_6px_rgba(37,99,235,0.35),inset_0_1px_0_rgba(255,255,255,0.4)]'
+                    : 'bg-gradient-to-b from-slate-100 to-slate-200 text-slate-700 border-slate-200 border-b-slate-400 shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]'
+                }`}
+              >
+                <Cpu className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-extrabold text-sm text-slate-900 block tracking-tight">
+                  Track A: Top-Down
+                </span>
+                <span className="text-[11px] font-medium text-blue-600 block">
+                  Compute & Cluster Sizing
+                </span>
+              </div>
+            </div>
+
+            {/* 3D Status Pill */}
+            {config.ingressMode === 'top-down' ? (
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide flex items-center gap-1.5 bg-gradient-to-b from-blue-500 to-blue-600 text-white border border-blue-400 border-b-[2px] border-b-blue-800 shadow-[0_2px_5px_rgba(37,99,235,0.3)] shrink-0">
+                <Check className="w-3 h-3 stroke-[3]" />
+                <span>Active</span>
+              </span>
+            ) : (
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-500 flex items-center gap-1 bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-300 border-b-[2px] border-b-slate-300/80 shadow-xs shrink-0">
+                <span>Select</span>
+              </span>
+            )}
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
+
+          <p className="text-xs text-slate-600 leading-relaxed font-normal">
             Specify AI accelerator silicon (GB200 NVL72, B200, H100) and GPU cluster scale. Engine calculates critical IT megawatts, thermal dissipation, and whitespace dimensions.
           </p>
         </button>
 
         <button
           onClick={() => onChangeConfig({ ingressMode: 'bottom-up' })}
-          className={`p-5 rounded-xl text-left border transition cursor-pointer shadow-xs ${
+          className={`relative p-5 rounded-2xl text-left transition-all duration-100 cursor-pointer select-none group ${
             config.ingressMode === 'bottom-up'
-              ? 'border-blue-500 bg-blue-50/70 ring-1 ring-blue-500/20'
-              : 'border-slate-200 bg-white hover:border-slate-300'
+              ? 'border-2 border-amber-400 border-b-[7px] border-b-amber-700 bg-gradient-to-b from-amber-50/90 via-orange-50/60 to-amber-100/90 shadow-[0_8px_20px_rgba(217,119,6,0.25),inset_0_1px_0_rgba(255,255,255,0.9)] hover:border-b-[8px] hover:-translate-y-[1px] active:translate-y-[6px] active:border-b-[2px] active:shadow-[0_2px_4px_rgba(217,119,6,0.2)]'
+              : 'border-2 border-slate-300 border-b-[7px] border-b-slate-400 bg-gradient-to-b from-white via-slate-50 to-slate-100 shadow-[0_8px_16px_rgba(0,0,0,0.07),inset_0_1px_0_rgba(255,255,255,0.95)] hover:border-slate-400 hover:border-b-slate-500 hover:border-b-[8px] hover:-translate-y-[1px] active:translate-y-[6px] active:border-b-[2px] active:shadow-[0_2px_4px_rgba(0,0,0,0.06)]'
           }`}
         >
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="font-bold text-sm text-slate-900 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-600" />
-              Track B: Bottom-Up (Site & Utility Grid Driven)
-            </span>
-            <span className="text-xs text-slate-500 font-medium">Ideal for Developers & Utilities</span>
+          {/* 3D Specular Highlight Line */}
+          <div className="pointer-events-none absolute inset-x-4 top-0 h-[1.5px] bg-gradient-to-r from-transparent via-white to-transparent opacity-90 rounded-full" />
+
+          <div className="flex items-center justify-between gap-3 mb-2.5">
+            <div className="flex items-center gap-2.5">
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border border-b-[3px] transition-transform duration-100 group-hover:scale-105 ${
+                  config.ingressMode === 'bottom-up'
+                    ? 'bg-gradient-to-b from-amber-500 to-amber-600 text-white border-amber-400 border-b-amber-800 shadow-[0_2px_6px_rgba(217,119,6,0.35),inset_0_1px_0_rgba(255,255,255,0.4)]'
+                    : 'bg-gradient-to-b from-slate-100 to-slate-200 text-slate-700 border-slate-200 border-b-slate-400 shadow-[0_1px_3px_rgba(0,0,0,0.08),inset_0_1px_0_rgba(255,255,255,0.8)]'
+                }`}
+              >
+                <Zap className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-extrabold text-sm text-slate-900 block tracking-tight">
+                  Track B: Bottom-Up
+                </span>
+                <span className="text-[11px] font-medium text-amber-600 block">
+                  Site & Grid Interconnect
+                </span>
+              </div>
+            </div>
+
+            {/* 3D Status Pill */}
+            {config.ingressMode === 'bottom-up' ? (
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide flex items-center gap-1.5 bg-gradient-to-b from-amber-500 to-amber-600 text-white border border-amber-400 border-b-[2px] border-b-amber-800 shadow-[0_2px_5px_rgba(217,119,6,0.3)] shrink-0">
+                <Check className="w-3 h-3 stroke-[3]" />
+                <span>Active</span>
+              </span>
+            ) : (
+              <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-500 flex items-center gap-1 bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-300 border-b-[2px] border-b-slate-300/80 shadow-xs shrink-0">
+                <span>Select</span>
+              </span>
+            )}
           </div>
-          <p className="text-xs text-slate-600 leading-relaxed">
+
+          <p className="text-xs text-slate-600 leading-relaxed font-normal">
             Start with available high-voltage substation interconnect megawatt capacity and land parcel acreage to determine achievable AI rack density and GPU capacity.
           </p>
         </button>
