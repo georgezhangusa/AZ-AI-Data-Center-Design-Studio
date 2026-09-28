@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenReadme}
-                className="inline-flex items-center gap-1 font-sans text-[11px] px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded border border-blue-200 transition-colors cursor-pointer select-none"
+                className="inline-flex items-center gap-1 font-sans text-[11px] px-2 py-0.5 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 text-white font-semibold rounded-md border border-blue-600 border-b-[2.5px] border-b-blue-800 shadow-[0_2px_4px_rgba(37,99,235,0.3)] active:translate-y-[1.5px] active:border-b-blue-700 active:shadow-none transition-all duration-75 cursor-pointer select-none"
               >
                 <BookOpen className="w-3 h-3" />
                 <span>Readme</span>
@@ -87,16 +87,6 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Zone 3: Primary Actions */}
       <div className="flex items-center gap-2.5">
-        {onOpenReadme && (
-          <button
-            onClick={onOpenReadme}
-            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white to-slate-100 hover:from-slate-50 hover:to-slate-100 border border-slate-300 border-b-[3px] border-b-slate-400 shadow-[0_2px_4px_rgba(0,0,0,0.06)] active:translate-y-[2px] active:border-b-slate-300 active:shadow-none transition-all duration-75 cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 select-none"
-            title="View Project README & Inquiries"
-          >
-            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-            <span>Readme</span>
-          </button>
-        )}
         <button
           onClick={onOpenCompare}
           className="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white to-slate-100 hover:from-slate-50 hover:to-slate-100 border border-slate-300 border-b-[3px] border-b-slate-400 shadow-[0_2px_4px_rgba(0,0,0,0.06)] active:translate-y-[2px] active:border-b-slate-300 active:shadow-none transition-all duration-75 cursor-pointer whitespace-nowrap shrink-0 flex items-center justify-center select-none"
