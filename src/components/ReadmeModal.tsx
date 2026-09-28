@@ -56,6 +56,54 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
             </p>
           </div>
 
+          {/* Three Design Stages */}
+          <div className="border border-slate-200 rounded-xl p-4.5 bg-slate-50/50">
+            <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
+              Three-Stage Design &amp; Configuration Workflow
+            </h3>
+            <div className="space-y-3">
+              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-xs mb-1">
+                  <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                    1
+                  </span>
+                  Workload Ingress and Sizing
+                </div>
+                <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
+                  <li>Choose presets such as 20–100 MW AI campuses.</li>
+                  <li>Select accelerator architecture, rack density, GPU count, and deployment region.</li>
+                  <li>Calculate estimated racks, critical IT load, white-space area, and coolant flow.</li>
+                </ul>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-xs mb-1">
+                  <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                    2
+                  </span>
+                  Component Engineering
+                </div>
+                <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
+                  <li>Configure substations, GIS/AIS yards, transformers, 800V DC or 480V AC distribution, generators, batteries, cooling systems, redundancy, and building structure.</li>
+                  <li>Continuously show engineering, cost, capacity, PUE, water usage, footprint, lead time, and projected COD metrics.</li>
+                </ul>
+              </div>
+
+              <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs">
+                <div className="flex items-center gap-2 font-bold text-slate-900 text-xs mb-1">
+                  <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
+                    3
+                  </span>
+                  Deliverables and ROI
+                </div>
+                <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
+                  <li>Generate or view aerial campus plans, electrical single-lines, mechanical P&amp;IDs, ROI/TCO, BOMs, ESG analysis, 3D isometrics, site layouts, and thermal views.</li>
+                  <li>Export a formal PDF, pitch pack, or push the design to CRM/estimating and EPC workflows.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Conceptual Demonstration & Contact Card */}
           <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4.5">
             <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1.5">
