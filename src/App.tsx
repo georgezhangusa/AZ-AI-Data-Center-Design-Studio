@@ -12,6 +12,7 @@ import { PushToEpcModal } from './components/PushToEpcModal';
 import { FormalDesignDocPrint } from './components/FormalDesignDocPrint';
 import { DeliverablesModal } from './components/DeliverablesModal';
 import { ExportPitchPackModal } from './components/ExportPitchPackModal';
+import { ReadmeModal } from './components/ReadmeModal';
 
 export default function App() {
   const [currentStep, setCurrentStep] = useState<number>(1);
@@ -19,6 +20,7 @@ export default function App() {
   const [isPushEpcOpen, setIsPushEpcOpen] = useState<boolean>(false);
   const [isDeliverablesModalOpen, setIsDeliverablesModalOpen] = useState<boolean>(false);
   const [isExportOpen, setIsExportOpen] = useState<boolean>(false);
+  const [isReadmeOpen, setIsReadmeOpen] = useState<boolean>(false);
 
   // Core Data Center Configuration State
   const [config, setConfig] = useState<DataCenterConfig>({
@@ -71,6 +73,7 @@ export default function App() {
         onOpenPushEpc={() => setIsPushEpcOpen(true)}
         onPrint={handlePrint}
         onOpenExport={() => setIsExportOpen(true)}
+        onOpenReadme={() => setIsReadmeOpen(true)}
       />
 
       {/* 2. Main Studio Workspace */}
@@ -161,6 +164,12 @@ export default function App() {
 
       {/* 7. Print Layout for Formal Design Document & FEED Deck */}
       <FormalDesignDocPrint config={config} calc={calc} />
+
+      {/* 8. About & Project README Modal */}
+      <ReadmeModal
+        isOpen={isReadmeOpen}
+        onClose={() => setIsReadmeOpen(false)}
+      />
     </div>
   );
 }

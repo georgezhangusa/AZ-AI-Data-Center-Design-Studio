@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Download, FileText, Send, Share2 } from 'lucide-react';
+import { ArrowRight, BookOpen, Download, FileText, Send, Share2 } from 'lucide-react';
 
 interface HeaderProps {
   currentStep: number;
@@ -8,6 +8,7 @@ interface HeaderProps {
   onOpenPushEpc: () => void;
   onPrint: () => void;
   onOpenExport?: () => void;
+  onOpenReadme?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -16,7 +17,8 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenCompare,
   onOpenPushEpc,
   onPrint,
-  onOpenExport
+  onOpenExport,
+  onOpenReadme
 }) => {
   return (
     <header className="border-b border-slate-200 bg-white/95 backdrop-blur sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between no-print shadow-xs">
@@ -26,12 +28,24 @@ export const Header: React.FC<HeaderProps> = ({
           AZ AI Data Center Design Studio
         </span>
         <div className="flex items-center gap-2 mt-0.5 text-xs text-slate-500 font-medium">
-          <span>Developer: George Zhang   
-          </span>
+          <span>Developer: George Zhang</span>
           <span className="inline-block w-1 h-1 rounded-full bg-slate-300"></span>
           <span className="font-mono text-[11px] px-1.5 py-0.5 bg-slate-100 text-slate-600 rounded border border-slate-200">
             v1.0.0
           </span>
+          {onOpenReadme && (
+            <>
+              <span className="inline-block w-1 h-1 rounded-full bg-slate-300"></span>
+              <button
+                type="button"
+                onClick={onOpenReadme}
+                className="inline-flex items-center gap-1 font-sans text-[11px] px-2 py-0.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded border border-blue-200 transition-colors cursor-pointer select-none"
+              >
+                <BookOpen className="w-3 h-3" />
+                <span>Readme</span>
+              </button>
+            </>
+          )}
         </div>
       </div>
 
@@ -73,6 +87,16 @@ export const Header: React.FC<HeaderProps> = ({
 
       {/* Zone 3: Primary Actions */}
       <div className="flex items-center gap-2.5">
+        {onOpenReadme && (
+          <button
+            onClick={onOpenReadme}
+            className="px-2.5 py-1.5 text-xs font-semibold rounded-lg text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white to-slate-100 hover:from-slate-50 hover:to-slate-100 border border-slate-300 border-b-[3px] border-b-slate-400 shadow-[0_2px_4px_rgba(0,0,0,0.06)] active:translate-y-[2px] active:border-b-slate-300 active:shadow-none transition-all duration-75 cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 select-none"
+            title="View Project README & Inquiries"
+          >
+            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+            <span>Readme</span>
+          </button>
+        )}
         <button
           onClick={onOpenCompare}
           className="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white to-slate-100 hover:from-slate-50 hover:to-slate-100 border border-slate-300 border-b-[3px] border-b-slate-400 shadow-[0_2px_4px_rgba(0,0,0,0.06)] active:translate-y-[2px] active:border-b-slate-300 active:shadow-none transition-all duration-75 cursor-pointer whitespace-nowrap shrink-0 flex items-center justify-center select-none"
