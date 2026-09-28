@@ -1,0 +1,8 @@
+{
+  "name": "AZ AI Data Center Design Studio",
+  "description": "AI data center design-build CPQ platform featuring workload sizing, physics constraint engine, dynamic costing, and automated engineering deliverables.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
