@@ -1,1 +1,3 @@
 Engineered an interactive software for AI data center design that converts workload requirements into preliminary facility plans. Users configure GPUs, racks, substations, switchgear, 800V DC power, batteries, generators, cooling, and redundancy. It calculates capacity, PUE, costs, footprint, water use, and schedule, then generates engineering, financial, visualization, and proposal deliverable packages.
+
+This is a conceptual demonstration. If you think it could become a useful application, we can collaborate to make it happen. Please get in touch with the author, George Zhang, by email: z_george@yahoo.com or reach me on LinkedIn: georgezhangusa
