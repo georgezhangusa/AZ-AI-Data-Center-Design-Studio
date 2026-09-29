@@ -14,7 +14,7 @@ The AI data center design and configuration go through **three** stages:
 
 **3. Deliverables and ROI**
    - Generate or view aerial campus plans, electrical single-lines, mechanical P&IDs, ROI/TCO, BOMs, ESG analysis, 3D isometrics, site layouts, and thermal views.
-   - Export a formal PDF, pitch pack, or push the design to CRM/estimating and EPC workflows.
+   - Export a pitch pack, or push the design to CRM/estimating and EPC workflows.
 ---
 
 ## Conceptual Demonstration & Collaboration
