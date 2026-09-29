@@ -20,15 +20,16 @@ export const Header: React.FC<HeaderProps> = ({
     <header className="border-b border-slate-200 bg-white/95 backdrop-blur sticky top-0 z-40 px-6 py-3.5 flex items-center justify-between no-print shadow-xs">
       {/* Zone 1: Single text element wordmark */}
       <div className="flex flex-col text-left">
-        <span className="text-[25px] font-extrabold tracking-tight text-slate-700 whitespace-nowrap leading-tight">
-          AZ AI Data Center Design Studio
-        </span>
-        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 font-medium">
-          <span className="text-sm font-semibold text-slate-700">Developer: George Zhang</span>
-          <span className="inline-block w-1 h-1 rounded-full bg-slate-300"></span>
+        <div className="flex items-center gap-2.5">
+          <span className="text-[25px] font-extrabold tracking-tight text-slate-700 whitespace-nowrap leading-tight">
+            AZ AI Data Center Design Studio
+          </span>
           <span className="font-mono text-xs px-2.5 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded-md border border-slate-200">
             v1.0.0
           </span>
+        </div>
+        <div className="flex items-center gap-3 mt-0.5 text-xs text-slate-500 font-medium">
+          <span className="text-sm font-semibold text-slate-700">Developer: George Zhang</span>
         </div>
       </div>
 

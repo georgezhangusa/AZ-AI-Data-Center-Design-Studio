@@ -70,9 +70,9 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                   Workload Ingress and Sizing
                 </div>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
-                  <li>Choose presets such as 20–100 MW AI campuses.</li>
-                  <li>Select accelerator architecture, rack density, GPU count, and deployment region.</li>
-                  <li>Calculate estimated racks, critical IT load, white-space area, and coolant flow.</li>
+                  
+                  <li>Select AI accelerator architecture, rack density, GPU count, and deployment region.</li>
+                  <li>System calculates estimated racks, critical IT load, white-space area, and coolant flow.</li>
                 </ul>
               </div>
 
@@ -98,7 +98,7 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                 </div>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
                   <li>Generate or view aerial campus plans, electrical single-lines, mechanical P&amp;IDs, ROI/TCO, BOMs, ESG analysis, 3D isometrics, site layouts, and thermal views.</li>
-                  <li>Export a formal PDF, pitch pack, or push the design to CRM/estimating and EPC workflows.</li>
+                  <li>Export a pitch pack, or submit the design to CRM estimating and EPC workflows.</li>
                 </ul>
               </div>
             </div>

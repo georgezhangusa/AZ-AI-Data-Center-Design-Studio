@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { ACCELERATOR_SPECS, REGIONAL_DATA } from '../data/constants';
 import { ARCHITECTURE_PRESETS } from '../data/presets';
 import { AcceleratorType, DataCenterConfig, DeploymentRegion, EngineeringCalculation, IngressMode } from '../types/datacenter';
@@ -21,6 +21,67 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
 }) => {
   const currentAccelerator = ACCELERATOR_SPECS[config.gpuType];
   const currentRegion = REGIONAL_DATA[config.region];
+
+  const [displayGpuCount, setDisplayGpuCount] = useState<string>(config.gpuCount.toLocaleString());
+  const [isGpuFocused, setIsGpuFocused] = useState<boolean>(false);
+  const gpuInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!isGpuFocused) {
+      setDisplayGpuCount(config.gpuCount.toLocaleString());
+    }
+  }, [config.gpuCount, isGpuFocused]);
+
+  const handleGpuInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const rawVal = e.target.value;
+    const cursorPosition = e.target.selectionStart || 0;
+    const digitsOnly = rawVal.replace(/[^0-9]/g, '');
+
+    if (digitsOnly === '') {
+      setDisplayGpuCount('');
+      return;
+    }
+
+    const num = parseInt(digitsOnly, 10);
+    const formatted = num.toLocaleString();
+
+    // Track how many digits were before cursor to preserve position nicely
+    const digitsBeforeCursor = rawVal.slice(0, cursorPosition).replace(/[^0-9]/g, '').length;
+
+    setDisplayGpuCount(formatted);
+    const clamped = Math.min(8192000, Math.max(2000, num));
+    onChangeConfig({ gpuCount: clamped });
+
+    requestAnimationFrame(() => {
+      if (gpuInputRef.current) {
+        let counted = 0;
+        let newPos = formatted.length;
+        for (let i = 0; i < formatted.length; i++) {
+          if (counted === digitsBeforeCursor) {
+            newPos = i;
+            break;
+          }
+          if (formatted[i] !== ',') {
+            counted++;
+          }
+          if (counted === digitsBeforeCursor) {
+            newPos = i + 1;
+            break;
+          }
+        }
+        gpuInputRef.current.setSelectionRange(newPos, newPos);
+      }
+    });
+  };
+
+  const handleGpuInputBlur = () => {
+    setIsGpuFocused(false);
+    const digitsOnly = displayGpuCount.replace(/[^0-9]/g, '');
+    const num = parseInt(digitsOnly, 10);
+    const valid = isNaN(num) ? 2000 : Math.min(8192000, Math.max(2000, num));
+    onChangeConfig({ gpuCount: valid });
+    setDisplayGpuCount(valid.toLocaleString());
+  };
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -220,15 +281,18 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                     </label>
                     <div className="flex items-center gap-1.5">
                       <input
-                        type="number"
-                        min={2000}
-                        max={8192000}
-                        step={1000}
-                        value={config.gpuCount}
-                        onChange={(e) => {
-                          const val = parseInt(e.target.value) || 2000;
-                          onChangeConfig({ gpuCount: Math.min(8192000, Math.max(2000, val)) });
+                        ref={gpuInputRef}
+                        type="text"
+                        inputMode="numeric"
+                        autoComplete="off"
+                        spellCheck={false}
+                        value={isGpuFocused ? displayGpuCount : config.gpuCount.toLocaleString()}
+                        onFocus={() => {
+                          setIsGpuFocused(true);
+                          setDisplayGpuCount(config.gpuCount.toLocaleString());
                         }}
+                        onChange={handleGpuInputChange}
+                        onBlur={handleGpuInputBlur}
                         className="w-32 px-2.5 py-1 text-right text-xs font-bold text-slate-900 font-mono bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none shadow-xs"
                       />
                       <span className="text-xs font-bold text-slate-700">GPUs</span>

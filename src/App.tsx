@@ -26,7 +26,7 @@ export default function App() {
   const [config, setConfig] = useState<DataCenterConfig>({
     ingressMode: 'top-down',
     gpuType: 'gb200',
-    gpuCount: 16000,
+    gpuCount: 1000000,
     region: 'us-east',
     fixedUtilityMW: 50,
     targetRackDensityKW: 120,
