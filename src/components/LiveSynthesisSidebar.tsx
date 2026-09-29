@@ -78,11 +78,19 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
         <div className="space-y-2">
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
             <span className="text-xs text-slate-500">Critical IT Load</span>
-            <span className="text-sm font-black text-slate-900 font-mono">{calc.criticalITLoadMW.toFixed(1)} MW</span>
+            <span className="text-sm font-black text-slate-900 font-mono">
+              {calc.criticalITLoadMW >= 1000
+                ? `${(calc.criticalITLoadMW / 1000).toFixed(2)} GW`
+                : `${calc.criticalITLoadMW.toFixed(1)} MW`}
+            </span>
           </div>
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
             <span className="text-xs text-slate-500">Total Facility Load</span>
-            <span className="text-sm font-black text-blue-700 font-mono">{calc.facilityTotalLoadMW} MW</span>
+            <span className="text-sm font-black text-blue-700 font-mono">
+              {calc.facilityTotalLoadMW >= 1000
+                ? `${(calc.facilityTotalLoadMW / 1000).toFixed(2)} GW`
+                : `${calc.facilityTotalLoadMW.toLocaleString()} MW`}
+            </span>
           </div>
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
             <span className="text-xs text-slate-500">Calculated PUE</span>
@@ -98,7 +106,11 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
           <div className="flex justify-between items-baseline">
             <span className="text-xs font-semibold text-slate-700">Total CapEx</span>
-            <span className="text-xl font-black text-slate-900 font-mono tracking-tight">${calc.totalCapExM}M</span>
+            <span className="text-xl font-black text-slate-900 font-mono tracking-tight">
+              {calc.totalCapExM >= 1000
+                ? `$${(calc.totalCapExM / 1000).toFixed(2)}B`
+                : `$${calc.totalCapExM.toLocaleString()}M`}
+            </span>
           </div>
           <div className="flex justify-between items-baseline text-xs text-slate-600 border-t border-slate-200 pt-2 font-mono">
             <span className="font-sans">Unit CapEx / MW</span>
@@ -106,11 +118,19 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
           </div>
           <div className="flex justify-between items-baseline text-xs text-slate-600 font-mono">
             <span className="font-sans">Annual Power OpEx</span>
-            <span className="text-slate-800">${calc.annualPowerCostM}M / yr</span>
+            <span className="text-slate-800">
+              {calc.annualPowerCostM >= 1000
+                ? `$${(calc.annualPowerCostM / 1000).toFixed(2)}B / yr`
+                : `$${calc.annualPowerCostM.toLocaleString()}M / yr`}
+            </span>
           </div>
           <div className="flex justify-between items-baseline text-xs text-slate-600 font-mono">
             <span className="font-sans">Total Annual OpEx</span>
-            <span className="text-emerald-700 font-bold">${calc.totalAnnualOpExM}M / yr</span>
+            <span className="text-emerald-700 font-bold">
+              {calc.totalAnnualOpExM >= 1000
+                ? `$${(calc.totalAnnualOpExM / 1000).toFixed(2)}B / yr`
+                : `$${calc.totalAnnualOpExM.toLocaleString()}M / yr`}
+            </span>
           </div>
         </div>
 

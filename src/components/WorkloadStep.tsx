@@ -218,26 +218,64 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                     <label className="text-xs font-semibold text-slate-800">
                       Target Cluster Scale (Total Accelerators)
                     </label>
-                    <span className="text-sm font-bold text-slate-900 font-mono">
-                      {config.gpuCount.toLocaleString()} GPUs
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        min={2000}
+                        max={8192000}
+                        step={1000}
+                        value={config.gpuCount}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value) || 2000;
+                          onChangeConfig({ gpuCount: Math.min(8192000, Math.max(2000, val)) });
+                        }}
+                        className="w-32 px-2.5 py-1 text-right text-xs font-bold text-slate-900 font-mono bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none shadow-xs"
+                      />
+                      <span className="text-xs font-bold text-slate-700">GPUs</span>
+                    </div>
                   </div>
 
                   <input
                     type="range"
                     min={2000}
-                    max={64000}
-                    step={1000}
+                    max={8192000}
+                    step={2000}
                     value={config.gpuCount}
                     onChange={(e) => onChangeConfig({ gpuCount: parseInt(e.target.value) || 2000 })}
-                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                   />
 
-                  <div className="flex justify-between text-[11px] text-slate-500 font-mono mt-1">
-                    <span>2,000 (Pod)</span>
-                    <span>16,000 (Cluster)</span>
-                    <span>32,000 (Campus)</span>
-                    <span>64,000+ (Supercluster)</span>
+                  <div className="flex justify-between text-[10px] text-slate-500 font-mono mt-1 select-none">
+                    <span>2K (Min)</span>
+                    <span>2M</span>
+                    <span>4M</span>
+                    <span>6M</span>
+                    <span>8M Max</span>
+                  </div>
+
+                  {/* Fast Scale Selectors */}
+                  <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-0.5">
+                    {[
+                      { label: '16K Pod', val: 16000 },
+                      { label: '64K Cluster', val: 64000 },
+                      { label: '250K Hyper', val: 250000 },
+                      { label: '1M Gigascale', val: 1000000 },
+                      { label: '4M Mega-Campus', val: 4000000 },
+                      { label: '8M Max', val: 8192000 }
+                    ].map((shortcut) => (
+                      <button
+                        key={shortcut.val}
+                        type="button"
+                        onClick={() => onChangeConfig({ gpuCount: shortcut.val })}
+                        className={`px-2 py-0.5 text-[10px] font-mono rounded-md border transition cursor-pointer whitespace-nowrap ${
+                          config.gpuCount === shortcut.val || (shortcut.val === 8192000 && config.gpuCount >= 8000000)
+                            ? 'bg-blue-600 text-white border-blue-600 font-bold shadow-xs'
+                            : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100 hover:text-slate-900'
+                        }`}
+                      >
+                        {shortcut.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
@@ -253,7 +291,11 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                     </div>
                     <div>
                       <span className="text-slate-500 block text-[11px]">Critical IT Demand</span>
-                      <span className="font-mono font-bold text-blue-700">{calc.criticalITLoadMW.toFixed(1)} MW</span>
+                      <span className="font-mono font-bold text-blue-700">
+                        {calc.criticalITLoadMW >= 1000
+                          ? `${(calc.criticalITLoadMW / 1000).toFixed(2)} GW`
+                          : `${calc.criticalITLoadMW.toFixed(1)} MW`}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-500 block text-[11px]">White Space Area</span>
@@ -355,7 +397,11 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
         {/* Step Navigation Action */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-200">
           <div className="text-xs text-slate-600">
-            Current Baseline: <strong className="text-slate-900 font-mono">{calc.criticalITLoadMW.toFixed(1)} MW IT</strong> · <strong className="text-blue-700 font-mono">{calc.totalRacks} Racks</strong>
+            Current Baseline: <strong className="text-slate-900 font-mono">
+              {calc.criticalITLoadMW >= 1000
+                ? `${(calc.criticalITLoadMW / 1000).toFixed(2)} GW IT`
+                : `${calc.criticalITLoadMW.toFixed(1)} MW IT`}
+            </strong> · <strong className="text-blue-700 font-mono">{calc.totalRacks.toLocaleString()} Racks</strong>
           </div>
           <button
             onClick={onNext}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { DataCenterConfig, EngineeringCalculation } from '../types/datacenter';
 import { calculatePersonaROI } from '../utils/engineeringEngine';
+import { generateFEEDPdfDeck } from '../utils/pdfGenerator';
 import { SingleLineDiagram } from './SingleLineDiagram';
 import { MechanicalPID } from './MechanicalPID';
 import {
@@ -9,6 +10,7 @@ import {
   FileSpreadsheet,
   FileText,
   Layers,
+  Loader2,
   Printer,
   Send,
   Sparkles,
@@ -39,10 +41,29 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<ModalTab>('summary');
   const [schematicView, setSchematicView] = useState<'sld' | 'pid'>('sld');
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
 
   if (!isOpen) return null;
 
   const roiNeocloud = calculatePersonaROI('neocloud', config, calc);
+
+  const handlePrintOrDownload = async () => {
+    setIsGeneratingPdf(true);
+    try {
+      const doc = generateFEEDPdfDeck(config, calc);
+      doc.save(`AZ_DataCenter_FEED_Pack_${calc.facilityTotalLoadMW}MW_${config.gpuType.toUpperCase()}.pdf`);
+      try {
+        onPrint();
+      } catch {}
+    } catch (e) {
+      console.error('PDF generation error:', e);
+      try {
+        onPrint();
+      } catch {}
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
@@ -68,11 +89,16 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
 
           <div className="flex items-center gap-2">
             <button
-              onClick={onPrint}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white to-slate-100 border border-slate-300 border-b-[2px] border-b-slate-400 hover:from-slate-50 hover:to-slate-100 shadow-xs active:translate-y-[1px] active:border-b-slate-300 transition-all flex items-center gap-1.5 cursor-pointer"
+              onClick={handlePrintOrDownload}
+              disabled={isGeneratingPdf}
+              className="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-700 hover:text-slate-900 bg-gradient-to-b from-white to-slate-100 border border-slate-300 border-b-[2px] border-b-slate-400 hover:from-slate-50 hover:to-slate-100 shadow-xs active:translate-y-[1px] active:border-b-slate-300 transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-70"
             >
-              <Printer className="w-3.5 h-3.5 text-slate-600" />
-              <span>Print / PDF</span>
+              {isGeneratingPdf ? (
+                <Loader2 className="w-3.5 h-3.5 text-slate-600 animate-spin" />
+              ) : (
+                <Printer className="w-3.5 h-3.5 text-slate-600" />
+              )}
+              <span>{isGeneratingPdf ? 'Generating...' : 'Print / PDF'}</span>
             </button>
 
             <button

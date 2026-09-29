@@ -107,6 +107,7 @@ export default function App() {
               onOpenPushEpc={() => setIsPushEpcOpen(true)}
               onPrint={handlePrint}
               onOpenExport={() => setIsExportOpen(true)}
+              onOpenCompare={() => setIsCompareOpen(true)}
             />
           )}
         </main>
