@@ -6,7 +6,7 @@ The AI data center design and configuration go through **three** stages:
 
 **1. Workload ingress and sizing**
    - Select accelerator architecture, rack density, GPU count, and deployment region.
-   - Calculate estimated racks, critical IT load, white-space area, and coolant flow.
+   - The system calculates estimated racks, critical IT load, white-space area, and coolant flow.
 
 **2. Component engineering**
    - Configure substations, GIS/AIS yards, transformers, 800V DC or 480V AC distribution, generators, batteries, cooling systems, redundancy, and building structure.
