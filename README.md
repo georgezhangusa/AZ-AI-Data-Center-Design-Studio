@@ -5,7 +5,6 @@ Engineered an interactive software for AI data center design that converts workl
 The AI data center design and configuration go through **three** stages:
 
 **1. Workload ingress and sizing**
-   - Choose presets such as 20–100 MW AI campuses.
    - Select accelerator architecture, rack density, GPU count, and deployment region.
    - Calculate estimated racks, critical IT load, white-space area, and coolant flow.
 
