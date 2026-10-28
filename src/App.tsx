@@ -13,8 +13,9 @@ import { FormalDesignDocPrint } from './components/FormalDesignDocPrint';
 import { DeliverablesModal } from './components/DeliverablesModal';
 import { ExportPitchPackModal } from './components/ExportPitchPackModal';
 import { ReadmeModal } from './components/ReadmeModal';
+import { LanguageProvider } from './i18n/LanguageContext';
 
-export default function App() {
+function AppContent() {
   const [currentStep, setCurrentStep] = useState<number>(1);
   const [isCompareOpen, setIsCompareOpen] = useState<boolean>(false);
   const [isPushEpcOpen, setIsPushEpcOpen] = useState<boolean>(false);
@@ -172,5 +173,13 @@ export default function App() {
         onClose={() => setIsReadmeOpen(false)}
       />
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <LanguageProvider>
+      <AppContent />
+    </LanguageProvider>
   );
 }

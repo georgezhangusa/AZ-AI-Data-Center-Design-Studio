@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { DataCenterConfig, EngineeringCalculation } from '../types/datacenter';
 import { Eye, Layers, Moon, RotateCcw, Sun, Thermometer, ZoomIn, ZoomOut } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface CampusVisualizerProps {
   config: DataCenterConfig;
@@ -10,6 +11,7 @@ interface CampusVisualizerProps {
 type ViewMode = 'isometric' | 'topdown' | 'thermal';
 
 export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc }) => {
+  const { t, lang } = useLanguage();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('isometric');
   const [canvasTheme, setCanvasTheme] = useState<'light' | 'dark'>('light');
@@ -187,7 +189,7 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
             }`}
           >
             <Layers className="w-3.5 h-3.5" />
-            3D Isometric
+            {t.deliverables.visualizerIsometric}
           </button>
           <button
             onClick={() => setViewMode('topdown')}
@@ -198,7 +200,7 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
             }`}
           >
             <Eye className="w-3.5 h-3.5" />
-            2D Site Layout
+            {t.deliverables.visualizerSite}
           </button>
           <button
             onClick={() => setViewMode('thermal')}
@@ -209,7 +211,7 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
             }`}
           >
             <Thermometer className="w-3.5 h-3.5" />
-            Thermal FLIR
+            {t.deliverables.visualizerThermal}
           </button>
         </div>
 
@@ -219,17 +221,17 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
           <button
             onClick={() => setCanvasTheme(prev => prev === 'light' ? 'dark' : 'light')}
             className="px-2.5 py-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer flex items-center gap-1.5 active:translate-y-[1px]"
-            title={canvasTheme === 'light' ? 'Switch to Dark Canvas' : 'Switch to Light Canvas'}
+            title={canvasTheme === 'light' ? t.deliverables.darkCanvas : t.deliverables.lightCanvas}
           >
             {canvasTheme === 'light' ? (
               <>
                 <Moon className="w-3.5 h-3.5 text-slate-600" />
-                <span className="text-[11px] font-medium hidden sm:inline">Dark Canvas</span>
+                <span className="text-[11px] font-medium hidden sm:inline">{t.deliverables.darkCanvas}</span>
               </>
             ) : (
               <>
                 <Sun className="w-3.5 h-3.5 text-amber-500" />
-                <span className="text-[11px] font-medium hidden sm:inline">Light Canvas</span>
+                <span className="text-[11px] font-medium hidden sm:inline">{t.deliverables.lightCanvas}</span>
               </>
             )}
           </button>
@@ -237,21 +239,21 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
           <button
             onClick={() => setZoom(prev => Math.min(1.8, +(prev + 0.15).toFixed(2)))}
             className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer active:translate-y-[1px]"
-            title="Zoom In"
+            title={t.deliverables.zoomIn}
           >
             <ZoomIn className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => setZoom(prev => Math.max(0.7, +(prev - 0.15).toFixed(2)))}
             className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer active:translate-y-[1px]"
-            title="Zoom Out"
+            title={t.deliverables.zoomOut}
           >
             <ZoomOut className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => { setZoom(1); setSelectedZone(null); }}
             className="p-1.5 bg-white border border-slate-300 text-slate-700 hover:text-slate-900 rounded-lg transition shadow-xs cursor-pointer active:translate-y-[1px]"
-            title="Reset View"
+            title={lang === 'zh' ? '重置视角' : lang === 'fr' ? 'Réinitialiser la vue' : 'Reset View'}
           >
             <RotateCcw className="w-3.5 h-3.5" />
           </button>
@@ -281,19 +283,19 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
         }`}>
           <div className={`font-bold flex items-center gap-2 ${canvasTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]"></span>
-            <span>Facility Load: <strong className={canvasTheme === 'light' ? 'text-emerald-600 font-mono' : 'text-emerald-400 font-mono'}>{calc.facilityTotalLoadMW} MW</strong></span>
+            <span>{lang === 'zh' ? '园区总负荷' : lang === 'fr' ? 'Puissance du site' : 'Facility Load'}: <strong className={canvasTheme === 'light' ? 'text-emerald-600 font-mono' : 'text-emerald-400 font-mono'}>{calc.facilityTotalLoadMW} MW</strong></span>
             <span className="text-slate-400 font-normal">| PUE <strong className={canvasTheme === 'light' ? 'text-blue-600 font-mono' : 'text-blue-400 font-mono'}>{calc.pue}</strong></span>
           </div>
           <div className={`font-mono text-[10px] flex items-center gap-2 ${canvasTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-            <span>Critical IT: <span className={`${canvasTheme === 'light' ? 'text-blue-600' : 'text-cyan-300'} font-bold`}>{calc.criticalITLoadMW.toFixed(1)} MW</span></span>
+            <span>{lang === 'zh' ? '关键IT负荷' : lang === 'fr' ? 'IT critique' : 'Critical IT'}: <span className={`${canvasTheme === 'light' ? 'text-blue-600' : 'text-cyan-300'} font-bold`}>{calc.criticalITLoadMW.toFixed(1)} MW</span></span>
             <span>·</span>
-            <span>Racks: <span className={`${canvasTheme === 'light' ? 'text-slate-800' : 'text-slate-100'} font-bold`}>{calc.totalRacks}</span></span>
+            <span>{lang === 'zh' ? '机柜数' : lang === 'fr' ? 'Baies' : 'Racks'}: <span className={`${canvasTheme === 'light' ? 'text-slate-800' : 'text-slate-100'} font-bold`}>{calc.totalRacks}</span></span>
             <span>·</span>
-            <span>Footprint: <span className={`${canvasTheme === 'light' ? 'text-slate-800' : 'text-slate-100'} font-bold`}>{Math.round(calc.totalFootprintSqFt / 1000)}k sq ft</span></span>
+            <span>{lang === 'zh' ? '占地' : lang === 'fr' ? 'Superficie' : 'Footprint'}: <span className={`${canvasTheme === 'light' ? 'text-slate-800' : 'text-slate-100'} font-bold`}>{Math.round(calc.totalFootprintSqFt / 1000)}k sq ft</span></span>
           </div>
           <div className={`text-[10px] flex items-center gap-1.5 pt-0.5 border-t ${canvasTheme === 'light' ? 'border-slate-200 text-slate-500' : 'border-slate-800 text-slate-400'}`}>
             <span className={canvasTheme === 'light' ? 'text-blue-600 font-mono' : 'text-blue-400 font-mono'}>▸</span>
-            <span>Click any sector below to inspect real-time engineering telemetry</span>
+            <span>{lang === 'zh' ? '点击下方任意分区查看实时工程遥测数据' : lang === 'fr' ? 'Cliquez sur une zone ci-dessous pour inspecter les données en direct' : 'Click any sector below to inspect real-time engineering telemetry'}</span>
           </div>
         </div>
 
@@ -304,7 +306,7 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
             : 'bg-slate-900/80 border border-slate-700/80 text-slate-300'
         }`}>
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-ping"></span>
-          <span>BIM 3D ENGINE · LIVE</span>
+          <span>{lang === 'zh' ? 'BIM 3D 引擎 · 运行中' : lang === 'fr' ? 'MOTEUR BIM 3D · EN DIRECT' : 'BIM 3D ENGINE · LIVE'}</span>
         </div>
 
         {/* Selected Zone Inspector Overlay */}
@@ -321,20 +323,36 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
                     ? 'bg-blue-50 text-blue-700 border-blue-200'
                     : 'bg-blue-500/20 text-blue-300 border-blue-500/40'
                 }`}>
-                  Sector Telemetry
+                  {lang === 'zh' ? '分区遥测' : lang === 'fr' ? 'Télémétrie secteur' : 'Sector Telemetry'}
                 </span>
                 <span className={`text-xs font-bold ${canvasTheme === 'light' ? 'text-slate-900' : 'text-white'}`}>
-                  {selectedZone === 'substation' && `High-Voltage Substation Yard (${config.substationType.toUpperCase()} - ${calc.facilityTotalLoadMW} MVA)`}
-                  {selectedZone === 'btm' && `BTM Power & Energy Storage Yard (${config.btmPower.toUpperCase()} + ${config.bessType.toUpperCase()})`}
-                  {selectedZone === 'white_space' && `High-Density Compute White Space (${calc.totalRacks} Racks · ${calc.rackDensityKW} kW/rack)`}
-                  {selectedZone === 'cooling' && `Central Heat Rejection Farm (${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} Tons)`}
+                  {selectedZone === 'substation' && (lang === 'zh' ? `高压变电站配电场 (${config.substationType.toUpperCase()} - ${calc.facilityTotalLoadMW} MVA)` : lang === 'fr' ? `Poste haute tension (${config.substationType.toUpperCase()} - ${calc.facilityTotalLoadMW} MVA)` : `High-Voltage Substation Yard (${config.substationType.toUpperCase()} - ${calc.facilityTotalLoadMW} MVA)`)}
+                  {selectedZone === 'btm' && (lang === 'zh' ? `表后自备发电与储能站 (${config.btmPower.toUpperCase()} + ${config.bessType.toUpperCase()})` : lang === 'fr' ? `Génération sur site & BESS (${config.btmPower.toUpperCase()} + ${config.bessType.toUpperCase()})` : `BTM Power & Energy Storage Yard (${config.btmPower.toUpperCase()} + ${config.bessType.toUpperCase()})`)}
+                  {selectedZone === 'white_space' && (lang === 'zh' ? `高密算力主机房 (${calc.totalRacks} 机柜 · ${calc.rackDensityKW} kW/机柜)` : lang === 'fr' ? `Salle blanche haute densité (${calc.totalRacks} baies · ${calc.rackDensityKW} kW/baie)` : `High-Density Compute White Space (${calc.totalRacks} Racks · ${calc.rackDensityKW} kW/rack)`)}
+                  {selectedZone === 'cooling' && (lang === 'zh' ? `中央散热水冷与排热场 (${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} 冷吨)` : lang === 'fr' ? `Centrale de rejet thermique (${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} Tonnes)` : `Central Heat Rejection Farm (${config.rejectionPlant.toUpperCase()} · ${calc.heatDissipationTons.toLocaleString()} Tons)`)}
                 </span>
               </div>
               <p className={`text-[11px] leading-relaxed ${canvasTheme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
-                {selectedZone === 'substation' && `Dual-fed 115kV/230kV step-down to 34.5kV. Substation yard footprint: ${calc.substationYardSqFt.toLocaleString()} sq ft. Dual redundant transformer bays with oil containment trenches and blast mitigation firewalls.`}
-                {selectedZone === 'btm' && `On-site fast-track generation with ride-through battery storage sized for instantaneous ramp synchronization and microgrid frequency stabilization.`}
-                {selectedZone === 'white_space' && `Direct-to-chip secondary fluid loop with ${config.serverPower === '800vdc' ? '800V DC central busway' : '480V AC distribution'} and ${calc.structuralSlabLoadPcf} lbs/sq ft structural slab rating. Hot aisle containment with dual redundant CDU distribution.`}
-                {selectedZone === 'cooling' && `Cooling system operating at ${calc.wue} L/kWh WUE with total circulation flow of ${calc.totalCoolantFlowGPM.toLocaleString()} GPM. Variable frequency drive adiabatic dry coolers with intelligent ambient dry-bulb optimization.`}
+                {selectedZone === 'substation' && (lang === 'zh'
+                  ? `双路 115kV/230kV 降压至 34.5kV。变电站占地面积：${calc.substationYardSqFt.toLocaleString()} 平方英尺。配备双重冗余变压器间隔、集油池以及防火防爆隔墙。`
+                  : lang === 'fr'
+                  ? `Double alimentation 115kV/230kV abaisseur vers 34,5kV. Emprise du poste: ${calc.substationYardSqFt.toLocaleString()} sq ft. Baies de transformateurs redondantes avec bacs de rétention et murs coupe-feu.`
+                  : `Dual-fed 115kV/230kV step-down to 34.5kV. Substation yard footprint: ${calc.substationYardSqFt.toLocaleString()} sq ft. Dual redundant transformer bays with oil containment trenches and blast mitigation firewalls.`)}
+                {selectedZone === 'btm' && (lang === 'zh'
+                  ? `具备即时爬坡调频功能的厂区并网分布式发电机组，配合锂电/飞轮储能系统，实现微电网级快速无缝切岛运行与电网电压支撑。`
+                  : lang === 'fr'
+                  ? `Génération rapide sur site couplée à un stockage d'énergie par batterie pour synchronisation instantanée et stabilisation de fréquence en îlotage.`
+                  : `On-site fast-track generation with ride-through battery storage sized for instantaneous ramp synchronization and microgrid frequency stabilization.`)}
+                {selectedZone === 'white_space' && (lang === 'zh'
+                  ? `芯片级液冷二次循环回路，配置 ${config.serverPower === '800vdc' ? '800V DC 直流母线' : '480V AC 交流配电'} 及 ${calc.structuralSlabLoadPcf} 磅/平方英尺承重楼板。全封闭热通道与双重冗余 CDU 冷却动力分配。`
+                  : lang === 'fr'
+                  ? `Boucle secondaire de liquide direct-on-chip avec ${config.serverPower === '800vdc' ? 'busway central 800V CC' : 'distribution 480V CA'} et dalle portante de ${calc.structuralSlabLoadPcf} lbs/sq ft. Confinement en allée chaude avec CDU redondants.`
+                  : `Direct-to-chip secondary fluid loop with ${config.serverPower === '800vdc' ? '800V DC central busway' : '480V AC distribution'} and ${calc.structuralSlabLoadPcf} lbs/sq ft structural slab rating. Hot aisle containment with dual redundant CDU distribution.`)}
+                {selectedZone === 'cooling' && (lang === 'zh'
+                  ? `水资源利用效率达 ${calc.wue} L/kWh，总冷媒循环流量达 ${calc.totalCoolantFlowGPM.toLocaleString()} GPM。变频绝热干冷器配合环境干球温度智能自适应调度。`
+                  : lang === 'fr'
+                  ? `Système de refroidissement fonctionnant avec un WUE de ${calc.wue} L/kWh et un débit total de ${calc.totalCoolantFlowGPM.toLocaleString()} GPM. Aéroréfrigérants adiabatiques à variateurs de fréquence.`
+                  : `Cooling system operating at ${calc.wue} L/kWh WUE with total circulation flow of ${calc.totalCoolantFlowGPM.toLocaleString()} GPM. Variable frequency drive adiabatic dry coolers with intelligent ambient dry-bulb optimization.`)}
               </p>
             </div>
             <button
@@ -345,7 +363,7 @@ export const CampusVisualizer: React.FC<CampusVisualizerProps> = ({ config, calc
                   : 'text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700'
               }`}
             >
-              Dismiss
+              {lang === 'zh' ? '关闭' : lang === 'fr' ? 'Fermer' : 'Dismiss'}
             </button>
           </div>
         )}

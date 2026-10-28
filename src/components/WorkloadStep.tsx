@@ -3,6 +3,7 @@ import { ACCELERATOR_SPECS, REGIONAL_DATA } from '../data/constants';
 import { ARCHITECTURE_PRESETS } from '../data/presets';
 import { AcceleratorType, DataCenterConfig, DeploymentRegion, EngineeringCalculation, IngressMode } from '../types/datacenter';
 import { ArrowRight, Check, Cpu, Globe, MapPin, Sparkles, Zap } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface WorkloadStepProps {
   config: DataCenterConfig;
@@ -19,6 +20,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
   onApplyPreset,
   onNext
 }) => {
+  const { t, lang } = useLanguage();
   const currentAccelerator = ACCELERATOR_SPECS[config.gpuType];
   const currentRegion = REGIONAL_DATA[config.region];
 
@@ -88,10 +90,10 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
       {/* Editorial Title & Context */}
       <div>
         <h2 className="text-xl font-bold tracking-tight text-slate-900">
-          Step 1: Workload Ingress & Preliminary Sizing
+          {t.workload.title}
         </h2>
         <p className="text-sm text-slate-600 mt-1">
-          Select your engineering ingress track: top-down AI accelerator workload sizing, or bottom-up utility power constraint envelope.
+          {t.workload.subtitle}
         </p>
       </div>
 
@@ -101,10 +103,10 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-blue-600" />
             <span className="text-xs font-bold uppercase tracking-wider text-slate-800">
-              Validated Reference Architectures
+              {t.workload.presetsTitle}
             </span>
           </div>
-          <span className="text-xs text-slate-500">1-Click Fast Configuration</span>
+          <span className="text-xs text-slate-500">{t.workload.presetsSubtitle}</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-2.5">
@@ -151,10 +153,10 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
               </div>
               <div>
                 <span className="font-extrabold text-sm text-slate-900 block tracking-tight">
-                  Track A: Top-Down
+                  {t.workload.trackA_title}
                 </span>
                 <span className="text-[11px] font-medium text-blue-600 block">
-                  Compute & Cluster Sizing
+                  {t.workload.trackA_tag}
                 </span>
               </div>
             </div>
@@ -163,17 +165,17 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
             {config.ingressMode === 'top-down' ? (
               <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide flex items-center gap-1.5 bg-gradient-to-b from-blue-500 to-blue-600 text-white border border-blue-400 border-b-[2px] border-b-blue-800 shadow-[0_2px_5px_rgba(37,99,235,0.3)] shrink-0">
                 <Check className="w-3 h-3 stroke-[3]" />
-                <span>Active</span>
+                <span>{t.common.active}</span>
               </span>
             ) : (
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-500 flex items-center gap-1 bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-300 border-b-[2px] border-b-slate-300/80 shadow-xs shrink-0">
-                <span>Select</span>
+                <span>{t.common.select}</span>
               </span>
             )}
           </div>
 
           <p className="text-xs text-slate-600 leading-relaxed font-normal">
-            Specify AI accelerator silicon (GB200 NVL72, B200, H100) and GPU cluster scale. Engine calculates critical IT megawatts, thermal dissipation, and whitespace dimensions.
+            {t.workload.trackA_desc}
           </p>
         </button>
 
@@ -201,10 +203,10 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
               </div>
               <div>
                 <span className="font-extrabold text-sm text-slate-900 block tracking-tight">
-                  Track B: Bottom-Up
+                  {t.workload.trackB_title}
                 </span>
                 <span className="text-[11px] font-medium text-amber-600 block">
-                  Site & Grid Interconnect
+                  {t.workload.trackB_tag}
                 </span>
               </div>
             </div>
@@ -213,17 +215,17 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
             {config.ingressMode === 'bottom-up' ? (
               <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wide flex items-center gap-1.5 bg-gradient-to-b from-amber-500 to-amber-600 text-white border border-amber-400 border-b-[2px] border-b-amber-800 shadow-[0_2px_5px_rgba(217,119,6,0.3)] shrink-0">
                 <Check className="w-3 h-3 stroke-[3]" />
-                <span>Active</span>
+                <span>{t.common.active}</span>
               </span>
             ) : (
               <span className="px-2.5 py-1 rounded-full text-[10px] font-bold text-slate-500 flex items-center gap-1 bg-gradient-to-b from-slate-100 to-slate-200 border border-slate-300 border-b-[2px] border-b-slate-300/80 shadow-xs shrink-0">
-                <span>Select</span>
+                <span>{t.common.select}</span>
               </span>
             )}
           </div>
 
           <p className="text-xs text-slate-600 leading-relaxed font-normal">
-            Start with available high-voltage substation interconnect megawatt capacity and land parcel acreage to determine achievable AI rack density and GPU capacity.
+            {t.workload.trackB_desc}
           </p>
         </button>
       </div>
@@ -236,7 +238,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
               {/* Accelerator Choice */}
               <div>
                 <label className="text-xs font-semibold text-slate-800 mb-2 block">
-                  AI Accelerator Architecture
+                  {t.workload.siliconTitle}
                 </label>
                 <div className="space-y-2">
                   {(Object.keys(ACCELERATOR_SPECS) as AcceleratorType[]).map((typeKey) => {
@@ -254,17 +256,17 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                       >
                         <div className="flex items-center justify-between mb-1">
                           <span className="font-bold">{item.name}</span>
-                          <span className="font-mono text-blue-700 font-semibold">{item.kwPerRack} kW / rack</span>
+                          <span className="font-mono text-blue-700 font-semibold">{item.kwPerRack} kW / {lang === 'zh' ? '机柜' : lang === 'fr' ? 'baie' : 'rack'}</span>
                         </div>
                         <div className="text-[11px] text-slate-600">
                           {item.description}
                         </div>
                         <div className="mt-1.5 flex items-center gap-2 text-[10px] text-slate-500">
-                          <span>{item.gpusPerRack} GPUs/rack</span>
+                          <span>{item.gpusPerRack} {lang === 'zh' ? '卡/柜' : lang === 'fr' ? 'GPU/baie' : 'GPUs/rack'}</span>
                           <span aria-hidden="true">·</span>
                           <span>{item.voltageTier}</span>
                           <span aria-hidden="true">·</span>
-                          <span>{item.requiresLiquid ? 'Direct Liquid Cooling' : 'High Flow Air / Hybrid'}</span>
+                          <span>{item.requiresLiquid ? (lang === 'zh' ? '直接芯片液冷 (DLC)' : lang === 'fr' ? 'Refroidissement Liquide Direct' : 'Direct Liquid Cooling') : (lang === 'zh' ? '高风量风冷 / 混冷' : lang === 'fr' ? 'Air Débit Élevé / Hybride' : 'High Flow Air / Hybrid')}</span>
                         </div>
                       </div>
                     );
@@ -277,7 +279,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="text-xs font-semibold text-slate-800">
-                      Target Cluster Scale (Total Accelerators)
+                      {t.workload.clusterScaleTitle}
                     </label>
                     <div className="flex items-center gap-1.5">
                       <input
@@ -295,7 +297,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                         onBlur={handleGpuInputBlur}
                         className="w-32 px-2.5 py-1 text-right text-xs font-bold text-slate-900 font-mono bg-white border border-slate-300 rounded-lg focus:border-blue-500 focus:outline-none shadow-xs"
                       />
-                      <span className="text-xs font-bold text-slate-700">GPUs</span>
+                      <span className="text-xs font-bold text-slate-700">{t.common.gpus}</span>
                     </div>
                   </div>
 
@@ -320,12 +322,12 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                   {/* Fast Scale Selectors */}
                   <div className="flex items-center gap-1.5 mt-2.5 overflow-x-auto pb-0.5">
                     {[
-                      { label: '16K Pod', val: 16000 },
-                      { label: '64K Cluster', val: 64000 },
-                      { label: '250K Hyper', val: 250000 },
-                      { label: '1M Gigascale', val: 1000000 },
-                      { label: '4M Mega-Campus', val: 4000000 },
-                      { label: '8M Max', val: 8192000 }
+                      { label: lang === 'zh' ? '1.6万 Pod' : lang === 'fr' ? 'Pod 16K' : '16K Pod', val: 16000 },
+                      { label: lang === 'zh' ? '6.4万 集群' : lang === 'fr' ? 'Cluster 64K' : '64K Cluster', val: 64000 },
+                      { label: lang === 'zh' ? '25万 超算' : lang === 'fr' ? 'Hyper 250K' : '250K Hyper', val: 250000 },
+                      { label: lang === 'zh' ? '100万 吉瓦级' : lang === 'fr' ? '1M Gigascale' : '1M Gigascale', val: 1000000 },
+                      { label: lang === 'zh' ? '400万 超级园区' : lang === 'fr' ? 'Méga-Campus 4M' : '4M Mega-Campus', val: 4000000 },
+                      { label: lang === 'zh' ? '800万 极限' : lang === 'fr' ? 'Max 8M' : '8M Max', val: 8192000 }
                     ].map((shortcut) => (
                       <button
                         key={shortcut.val}
@@ -346,15 +348,15 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                 {/* Instant Sizing Derived Metrics */}
                 <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2.5">
                   <div className="text-xs font-bold text-slate-800 border-b border-slate-200 pb-1.5">
-                    Calculated White Space Envelopes
+                    {t.workload.calculatedEnvelopes}
                   </div>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div>
-                      <span className="text-slate-500 block text-[11px]">Active Enclosures</span>
-                      <span className="font-mono font-bold text-slate-900">{calc.totalRacks.toLocaleString()} Racks</span>
+                      <span className="text-slate-500 block text-[11px]">{t.workload.activeEnclosures}</span>
+                      <span className="font-mono font-bold text-slate-900">{calc.totalRacks.toLocaleString()} {t.common.racks}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block text-[11px]">Critical IT Demand</span>
+                      <span className="text-slate-500 block text-[11px]">{t.workload.criticalIT}</span>
                       <span className="font-mono font-bold text-blue-700">
                         {calc.criticalITLoadMW >= 1000
                           ? `${(calc.criticalITLoadMW / 1000).toFixed(2)} GW`
@@ -362,12 +364,12 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block text-[11px]">White Space Area</span>
-                      <span className="font-mono font-bold text-slate-800">{calc.whiteSpaceSqFt.toLocaleString()} sq ft</span>
+                      <span className="text-slate-500 block text-[11px]">{t.workload.whiteSpaceArea}</span>
+                      <span className="font-mono font-bold text-slate-800">{calc.whiteSpaceSqFt.toLocaleString()} {t.common.sqft}</span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block text-[11px]">Coolant Circulation</span>
-                      <span className="font-mono font-bold text-emerald-700">{calc.totalCoolantFlowGPM.toLocaleString()} GPM</span>
+                      <span className="text-slate-500 block text-[11px]">{t.workload.coolantCirculation}</span>
+                      <span className="font-mono font-bold text-emerald-700">{calc.totalCoolantFlowGPM.toLocaleString()} {t.common.gpm}</span>
                     </div>
                   </div>
                 </div>
@@ -375,7 +377,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                 {/* Region & Climate Selection */}
                 <div>
                   <label className="text-xs font-semibold text-slate-800 mb-1.5 block">
-                    Deployment Region & Power Tariff
+                    {t.workload.regionTitle}
                   </label>
                   <select
                     value={config.region}
@@ -386,14 +388,14 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                       const reg = REGIONAL_DATA[regKey];
                       return (
                         <option key={regKey} value={regKey}>
-                          {reg.name} — ${reg.powerTariffPerKWh.toFixed(3)}/kWh ({reg.gridQueueYears} yr queue)
+                          {reg.name} — ${reg.powerTariffPerKWh.toFixed(3)}{t.common.perKWh} ({reg.gridQueueYears} {t.workload.queueYears})
                         </option>
                       );
                     })}
                   </select>
                   <div className="mt-2 text-[11px] text-slate-500 flex items-center gap-2">
                     <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
-                    <span>Grid: {currentRegion.gridName} · Summer Ambient: {currentRegion.ambientDryBulbC}°C Dry / {currentRegion.ambientWetBulbC}°C Wet</span>
+                    <span>{t.workload.gridPrefix}: {currentRegion.gridName} · {t.workload.summerAmbient}: {currentRegion.ambientDryBulbC}°C {t.workload.dryBulb} / {currentRegion.ambientWetBulbC}°C {t.workload.wetBulb}</span>
                   </div>
                 </div>
               </div>
@@ -404,7 +406,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             <div>
               <label className="text-xs font-semibold text-slate-800 mb-1.5 block">
-                Substation Interconnect Cap (MW)
+                {t.workload.substationCapTitle}
               </label>
               <input
                 type="number"
@@ -416,13 +418,13 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                 className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 font-mono focus:border-blue-500 focus:outline-none shadow-xs"
               />
               <span className="text-[11px] text-slate-500 mt-1 block">
-                Utility-committed MV feeder capacity
+                {t.workload.substationCapSub}
               </span>
             </div>
 
             <div>
               <label className="text-xs font-semibold text-slate-800 mb-1.5 block">
-                Target Rack Density (kW)
+                {t.workload.rackDensityTitle}
               </label>
               <input
                 type="number"
@@ -434,13 +436,13 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                 className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 font-mono focus:border-blue-500 focus:outline-none shadow-xs"
               />
               <span className="text-[11px] text-slate-500 mt-1 block">
-                Average kW per server cabinet
+                {t.workload.rackDensitySub}
               </span>
             </div>
 
             <div>
               <label className="text-xs font-semibold text-slate-800 mb-1.5 block">
-                Site Parcel Size (Acres)
+                {t.workload.siteParcelTitle}
               </label>
               <input
                 type="number"
@@ -452,7 +454,7 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
                 className="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs text-slate-900 font-mono focus:border-blue-500 focus:outline-none shadow-xs"
               />
               <span className="text-[11px] text-slate-500 mt-1 block">
-                Available land area for yard & buffers
+                {t.workload.siteParcelSub}
               </span>
             </div>
           </div>
@@ -461,17 +463,18 @@ export const WorkloadStep: React.FC<WorkloadStepProps> = ({
         {/* Step Navigation Action */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-200">
           <div className="text-xs text-slate-600">
-            Current Baseline: <strong className="text-slate-900 font-mono">
+            {lang === 'zh' ? '当前基线规格：' : lang === 'fr' ? 'Configuration Actuelle : ' : 'Current Baseline: '}
+            <strong className="text-slate-900 font-mono">
               {calc.criticalITLoadMW >= 1000
                 ? `${(calc.criticalITLoadMW / 1000).toFixed(2)} GW IT`
                 : `${calc.criticalITLoadMW.toFixed(1)} MW IT`}
-            </strong> · <strong className="text-blue-700 font-mono">{calc.totalRacks.toLocaleString()} Racks</strong>
+            </strong> · <strong className="text-blue-700 font-mono">{calc.totalRacks.toLocaleString()} {t.common.racks}</strong>
           </div>
           <button
             onClick={onNext}
             className="px-5 py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 border border-blue-600 border-b-4 border-b-blue-800 shadow-[0_4px_8px_rgba(37,99,235,0.25)] active:translate-y-[3px] active:border-b-2 active:border-b-blue-700 active:shadow-none transition-all duration-75 flex items-center gap-2 cursor-pointer select-none"
           >
-            <span>Proceed to Subsystem Physics</span>
+            <span>{t.workload.btnNext}</span>
             <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>

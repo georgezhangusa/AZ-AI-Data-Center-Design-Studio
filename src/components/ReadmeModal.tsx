@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Linkedin, Copy, Check, ExternalLink, BookOpen, Cpu, Zap, Droplets, ShieldCheck, FileSpreadsheet, Building2 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface ReadmeModalProps {
   isOpen: boolean;
@@ -7,6 +8,7 @@ interface ReadmeModalProps {
 }
 
 export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
   const [copiedEmail, setCopiedEmail] = useState(false);
 
   if (!isOpen) return null;
@@ -28,10 +30,10 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
             </div>
             <div>
               <h2 className="text-lg font-bold text-slate-900 leading-tight">
-                About &amp; Project README
+                {t.readme.title}
               </h2>
               <p className="text-xs text-slate-500 font-medium">
-                AZ AI Data Center Design Studio • Developer: George Zhang
+                {t.readme.subtitle}
               </p>
             </div>
           </div>
@@ -49,17 +51,17 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
           {/* Executive Overview */}
           <div className="bg-blue-50/70 border border-blue-200/80 rounded-xl p-4.5">
             <h3 className="text-xs font-bold text-blue-900 uppercase tracking-wider mb-2">
-              System Overview
+              {t.readme.overviewTitle}
             </h3>
             <p className="text-slate-800 text-[13.5px] leading-relaxed">
-              Engineered an interactive software for AI data center design that converts workload requirements into preliminary facility plans. Users configure GPUs, racks, substations, switchgear, 800V DC power, batteries, generators, cooling, and redundancy. It calculates capacity, PUE, costs, footprint, water use, and schedule, then generates engineering, financial, visualization, and proposal deliverable packages.
+              {t.readme.overviewText}
             </p>
           </div>
 
           {/* Three Design Stages */}
           <div className="border border-slate-200 rounded-xl p-4.5 bg-slate-50/50">
             <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider mb-3">
-              Three-Stage Design &amp; Configuration Workflow
+              {t.readme.workflowTitle}
             </h3>
             <div className="space-y-3">
               <div className="bg-white border border-slate-200 rounded-lg p-3 shadow-2xs">
@@ -67,12 +69,11 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                   <span className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                     1
                   </span>
-                  Workload Ingress and Sizing
+                  {t.readme.stage1Title}
                 </div>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
-                  
-                  <li>Select AI accelerator architecture, rack density, GPU count, and deployment region.</li>
-                  <li>System calculates estimated racks, critical IT load, white-space area, and coolant flow.</li>
+                  <li>{t.readme.stage1Item1}</li>
+                  <li>{t.readme.stage1Item2}</li>
                 </ul>
               </div>
 
@@ -81,11 +82,11 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                   <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                     2
                   </span>
-                  Component Engineering
+                  {t.readme.stage2Title}
                 </div>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
-                  <li>Configure substations, GIS/AIS yards, transformers, 800V DC or 480V AC distribution, generators, batteries, cooling systems, redundancy, and building structure.</li>
-                  <li>Continuously show engineering, cost, capacity, PUE, water usage, footprint, lead time, and projected COD metrics.</li>
+                  <li>{t.readme.stage2Item1}</li>
+                  <li>{t.readme.stage2Item2}</li>
                 </ul>
               </div>
 
@@ -94,11 +95,11 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                   <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[11px] font-bold shrink-0">
                     3
                   </span>
-                  Deliverables and ROI
+                  {t.readme.stage3Title}
                 </div>
                 <ul className="text-xs text-slate-600 space-y-1 list-disc list-inside pl-1">
-                  <li>Generate or view aerial campus plans, electrical single-lines, mechanical P&amp;IDs, ROI/TCO, BOMs, ESG analysis, 3D isometrics, site layouts, and thermal views.</li>
-                  <li>Export a pitch pack, or submit the design to CRM estimating and EPC workflows.</li>
+                  <li>{t.readme.stage3Item1}</li>
+                  <li>{t.readme.stage3Item2}</li>
                 </ul>
               </div>
             </div>
@@ -107,10 +108,10 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
           {/* Conceptual Demonstration & Contact Card */}
           <div className="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4.5">
             <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider mb-1.5">
-              Collaboration &amp; Inquiries
+              {t.readme.contactTitle}
             </h3>
             <p className="text-slate-800 text-[13.5px] leading-relaxed mb-3">
-              This is a conceptual demonstration. If you think it could become a useful application, we can collaborate to make it happen. Please get in touch with the author, <strong>George Zhang</strong>:
+              {t.readme.contactText} <strong>{t.readme.contactAuthor}</strong>:
             </p>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-1">
@@ -119,7 +120,7 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-amber-300 text-xs font-semibold text-slate-800 hover:bg-amber-100/50 shadow-xs transition-colors"
               >
                 <Mail className="w-3.5 h-3.5 text-amber-700" />
-                <span>z_george@yahoo.com</span>
+                <span>{t.readme.emailBtn}</span>
               </a>
 
               <button
@@ -131,12 +132,12 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                 {copiedEmail ? (
                   <>
                     <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700 font-semibold">Copied</span>
+                    <span className="text-emerald-700 font-semibold">{t.common.copied}</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-3.5 h-3.5 text-slate-500" />
-                    <span>Copy Email</span>
+                    <span>{t.common.copy}</span>
                   </>
                 )}
               </button>
@@ -148,7 +149,7 @@ export const ReadmeModal: React.FC<ReadmeModalProps> = ({ isOpen, onClose }) => 
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#0077b5] text-white text-xs font-semibold hover:bg-[#006097] shadow-xs transition-colors"
               >
                 <Linkedin className="w-3.5 h-3.5 fill-current" />
-                <span>LinkedIn: georgezhangusa</span>
+                <span>{t.readme.linkedinBtn}</span>
                 <ExternalLink className="w-3 h-3 opacity-80" />
               </a>
             </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { DataCenterConfig, EngineeringCalculation } from '../types/datacenter';
 import { AlertCircle, Calendar, Clock, DollarSign, FileText, Layers, ShieldAlert, Sparkles, TrendingUp, Zap } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface LiveSynthesisSidebarProps {
   config: DataCenterConfig;
@@ -17,6 +18,7 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
   onSetStep,
   onOpenDeliverablesModal
 }) => {
+  const { t, lang } = useLanguage();
   const hasCritical = calc.alerts.some(a => a.level === 'critical');
 
   const handleViewDeliverables = () => {
@@ -32,7 +34,7 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
         {/* Header */}
         <div>
           <span className="text-base font-bold uppercase tracking-wider text-blue-900 block">
-            Synthesis
+            {t.synthesis.title}
           </span>
         </div>
 
@@ -58,10 +60,10 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
             />
             <span className="font-semibold text-[11px]">
               {hasCritical
-                ? 'Constraint Violation Detected'
+                ? t.synthesis.criticalViolation
                 : calc.alerts.length > 0
-                ? `${calc.alerts.length} Engineering Warnings`
-                : 'All Constraints Verified'}
+                ? `${calc.alerts.length} ${t.synthesis.engineeringAlerts}`
+                : t.synthesis.viable}
             </span>
           </div>
           {calc.alerts.length > 0 && currentStep !== 2 && (
@@ -69,7 +71,7 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
               onClick={() => onSetStep(2)}
               className="text-[10px] font-bold underline hover:text-slate-900"
             >
-              Fix in Step 2
+              {lang === 'zh' ? '在第 2 步修复' : lang === 'fr' ? 'Corriger à l\'Étape 2' : 'Fix in Step 2'}
             </button>
           )}
         </div>
@@ -77,7 +79,7 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
         {/* Electrical & Thermal Capacity Metrics */}
         <div className="space-y-2">
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
-            <span className="text-xs text-slate-500">Critical IT Load</span>
+            <span className="text-xs text-slate-500">{t.workload.criticalIT}</span>
             <span className="text-sm font-black text-slate-900 font-mono">
               {calc.criticalITLoadMW >= 1000
                 ? `${(calc.criticalITLoadMW / 1000).toFixed(2)} GW`
@@ -85,7 +87,7 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
             </span>
           </div>
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
-            <span className="text-xs text-slate-500">Total Facility Load</span>
+            <span className="text-xs text-slate-500">{lang === 'zh' ? '全厂供电需求' : lang === 'fr' ? 'Demande Totale Site' : 'Total Facility Load'}</span>
             <span className="text-sm font-black text-blue-700 font-mono">
               {calc.facilityTotalLoadMW >= 1000
                 ? `${(calc.facilityTotalLoadMW / 1000).toFixed(2)} GW`
@@ -93,19 +95,19 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
             </span>
           </div>
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
-            <span className="text-xs text-slate-500">Calculated PUE</span>
+            <span className="text-xs text-slate-500">{t.synthesis.designPUE}</span>
             <span className="text-sm font-black text-emerald-700 font-mono">{calc.pue.toFixed(2)}</span>
           </div>
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-between">
-            <span className="text-xs text-slate-500">Racks ({calc.rackDensityKW} kW/rk)</span>
-            <span className="text-sm font-black text-slate-900 font-mono">{calc.totalRacks.toLocaleString()} Racks</span>
+            <span className="text-xs text-slate-500">{t.workload.activeEnclosures} ({calc.rackDensityKW} kW/{lang === 'zh' ? '柜' : lang === 'fr' ? 'baie' : 'rk'})</span>
+            <span className="text-sm font-black text-slate-900 font-mono">{calc.totalRacks.toLocaleString()} {t.common.racks}</span>
           </div>
         </div>
 
         {/* CapEx & OpEx Summary Card */}
         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
           <div className="flex justify-between items-baseline">
-            <span className="text-xs font-semibold text-slate-700">Total CapEx</span>
+            <span className="text-xs font-semibold text-slate-700">{t.synthesis.totalCapEx}</span>
             <span className="text-xl font-black text-slate-900 font-mono tracking-tight">
               {calc.totalCapExM >= 1000
                 ? `$${(calc.totalCapExM / 1000).toFixed(2)}B`
@@ -113,23 +115,23 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
             </span>
           </div>
           <div className="flex justify-between items-baseline text-xs text-slate-600 border-t border-slate-200 pt-2 font-mono">
-            <span className="font-sans">Unit CapEx / MW</span>
+            <span className="font-sans">{lang === 'zh' ? '单位造价' : lang === 'fr' ? 'Coût Unitaire' : 'Unit CapEx / MW'}</span>
             <span className="text-slate-800">${calc.capexPerMW}M / MW</span>
           </div>
           <div className="flex justify-between items-baseline text-xs text-slate-600 font-mono">
-            <span className="font-sans">Annual Power OpEx</span>
+            <span className="font-sans">{lang === 'zh' ? '年均电费支出' : lang === 'fr' ? 'OpEx Électrique Annuel' : 'Annual Power OpEx'}</span>
             <span className="text-slate-800">
               {calc.annualPowerCostM >= 1000
-                ? `$${(calc.annualPowerCostM / 1000).toFixed(2)}B / yr`
-                : `$${calc.annualPowerCostM.toLocaleString()}M / yr`}
+                ? `$${(calc.annualPowerCostM / 1000).toFixed(2)}B ${t.common.perYear}`
+                : `$${calc.annualPowerCostM.toLocaleString()}M ${t.common.perYear}`}
             </span>
           </div>
           <div className="flex justify-between items-baseline text-xs text-slate-600 font-mono">
-            <span className="font-sans">Total Annual OpEx</span>
+            <span className="font-sans">{t.synthesis.annualOpEx}</span>
             <span className="text-emerald-700 font-bold">
               {calc.totalAnnualOpExM >= 1000
-                ? `$${(calc.totalAnnualOpExM / 1000).toFixed(2)}B / yr`
-                : `$${calc.totalAnnualOpExM.toLocaleString()}M / yr`}
+                ? `$${(calc.totalAnnualOpExM / 1000).toFixed(2)}B ${t.common.perYear}`
+                : `$${calc.totalAnnualOpExM.toLocaleString()}M ${t.common.perYear}`}
             </span>
           </div>
         </div>
@@ -139,9 +141,9 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-slate-800 flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5 text-amber-600" />
-              Critical Path Lead Time
+              {t.synthesis.criticalPathLead}
             </span>
-            <span className="font-mono font-bold text-amber-700">{calc.criticalPathWeeks} Weeks</span>
+            <span className="font-mono font-bold text-amber-700">{calc.criticalPathWeeks} {t.common.weeks}</span>
           </div>
 
           {/* Progress visualizer */}
@@ -157,24 +159,25 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
           </div>
 
           <div className="flex items-center justify-between text-[11px] text-slate-600 pt-0.5">
-            <span>Projected COD:</span>
+            <span>{t.synthesis.projectedCOD}:</span>
             <span className="font-mono font-bold text-slate-900">{calc.projectedCODDate}</span>
           </div>
 
           <div className="text-[10px] text-slate-500 border-t border-slate-200 pt-1.5 leading-snug">
-            Bottleneck: <span className="text-slate-800 font-medium">{calc.bottleneckComponent}</span>
+            {lang === 'zh' ? '主瓶颈构件：' : lang === 'fr' ? 'Goulot d\'Étranglement : ' : 'Bottleneck: '}
+            <span className="text-slate-800 font-medium">{calc.bottleneckComponent}</span>
           </div>
         </div>
 
         {/* ESG Quick Stats */}
         <div className="grid grid-cols-2 gap-2 text-center text-xs">
           <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-            <span className="text-[10px] text-slate-500 block uppercase font-medium">WUE (L/kWh)</span>
+            <span className="text-[10px] text-slate-500 block uppercase font-medium">{t.synthesis.wueMetric}</span>
             <span className="font-mono font-bold text-emerald-700">{calc.wue}</span>
           </div>
           <div className="p-2.5 rounded-lg bg-slate-50 border border-slate-200">
-            <span className="text-[10px] text-slate-500 block uppercase font-medium">Footprint</span>
-            <span className="font-mono font-bold text-slate-900">{Math.round(calc.totalFootprintSqFt / 1000)}k sq ft</span>
+            <span className="text-[10px] text-slate-500 block uppercase font-medium">{t.workload.whiteSpaceArea}</span>
+            <span className="font-mono font-bold text-slate-900">{Math.round(calc.totalFootprintSqFt / 1000)}k {t.common.sqft}</span>
           </div>
         </div>
       </div>
@@ -186,7 +189,7 @@ export const LiveSynthesisSidebar: React.FC<LiveSynthesisSidebarProps> = ({
           className="w-full py-2.5 rounded-xl font-bold text-xs text-white bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 border border-blue-600 border-b-4 border-b-blue-800 shadow-[0_4px_8px_rgba(37,99,235,0.25)] active:translate-y-[3px] active:border-b-2 active:border-b-blue-700 active:shadow-none transition-all duration-75 cursor-pointer flex items-center justify-center gap-2 select-none group"
         >
           <FileText className="w-3.5 h-3.5 transition-transform group-hover:scale-110" />
-          <span>View Formal Deliverables</span>
+          <span>{t.synthesis.viewDeliverables}</span>
         </button>
       </div>
     </aside>

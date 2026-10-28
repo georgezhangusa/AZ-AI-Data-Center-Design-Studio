@@ -17,6 +17,7 @@ import {
   X,
   Zap
 } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface DeliverablesModalProps {
   isOpen: boolean;
@@ -39,6 +40,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
   onOpenPushEpc,
   onGoToStep3
 }) => {
+  const { t, lang } = useLanguage();
   const [activeTab, setActiveTab] = useState<ModalTab>('summary');
   const [schematicView, setSchematicView] = useState<'sld' | 'pid'>('sld');
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
@@ -73,17 +75,21 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wider">
-                Formal Deliverable
+                {lang === 'zh' ? '正式工程交付成果' : lang === 'fr' ? 'Livrable formel FEED' : 'Formal Deliverable'}
               </span>
               <span className="text-xs font-mono text-slate-500">
                 DOC-REF: AZ-FEED-2026-0928
               </span>
             </div>
             <h2 className="text-lg font-bold text-slate-900">
-              Front-End Engineering Design (FEED) Deliverable Study
+              {lang === 'zh' ? '前端工程设计 (FEED) 交付研究报告' : lang === 'fr' ? 'Étude de faisabilité FEED (Conception technique d\'avant-projet)' : 'Front-End Engineering Design (FEED) Deliverable Study'}
             </h2>
             <p className="text-xs text-slate-600">
-              Mission-critical engineering feasibility package for {calc.facilityTotalLoadMW} MW facility with {config.gpuType.toUpperCase()} accelerators.
+              {lang === 'zh'
+                ? `针对 ${calc.facilityTotalLoadMW} MW 设施与 ${config.gpuType.toUpperCase()} 算力集群的关键物理工程可行性方案包。`
+                : lang === 'fr'
+                ? `Dossier de faisabilité technique pour installation de ${calc.facilityTotalLoadMW} MW avec accélérateurs ${config.gpuType.toUpperCase()}.`
+                : `Mission-critical engineering feasibility package for ${calc.facilityTotalLoadMW} MW facility with ${config.gpuType.toUpperCase()} accelerators.`}
             </p>
           </div>
 
@@ -98,7 +104,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
               ) : (
                 <Printer className="w-3.5 h-3.5 text-slate-600" />
               )}
-              <span>{isGeneratingPdf ? 'Generating...' : 'Print / PDF'}</span>
+              <span>{isGeneratingPdf ? (lang === 'zh' ? '生成中...' : lang === 'fr' ? 'Génération...' : 'Generating...') : (lang === 'zh' ? '打印 / PDF' : lang === 'fr' ? 'Imprimer / PDF' : 'Print / PDF')}</span>
             </button>
 
             <button
@@ -109,7 +115,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
               className="px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 border border-emerald-700 border-b-[3px] border-b-emerald-900 shadow-xs active:translate-y-[2px] active:border-b-emerald-800 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Send className="w-3.5 h-3.5" />
-              <span>Push to EPC</span>
+              <span>{t.deliverables.btnSubmitEpc}</span>
             </button>
 
             <button
@@ -131,7 +137,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
           >
-            1. Executive Summary
+            {lang === 'zh' ? '1. 执行摘要' : lang === 'fr' ? '1. Résumé exécutif' : '1. Executive Summary'}
           </button>
           <button
             onClick={() => setActiveTab('subsystems')}
@@ -141,7 +147,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
           >
-            2. Subsystem Specs
+            {lang === 'zh' ? '2. 子系统技术规范' : lang === 'fr' ? '2. Spécifications sous-systèmes' : '2. Subsystem Specs'}
           </button>
           <button
             onClick={() => setActiveTab('bom')}
@@ -151,7 +157,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
           >
-            3. Bill of Materials (BOM)
+            {lang === 'zh' ? '3. 详细物料清单 (BOM)' : lang === 'fr' ? '3. Nomenclature détaillée (BOM)' : '3. Bill of Materials (BOM)'}
           </button>
           <button
             onClick={() => setActiveTab('roi')}
@@ -161,7 +167,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
           >
-            4. Persona Financial ROI
+            {lang === 'zh' ? '4. 财务投资回报率 (ROI)' : lang === 'fr' ? '4. ROI financier et TCO' : '4. Persona Financial ROI'}
           </button>
           <button
             onClick={() => setActiveTab('schematics')}
@@ -171,7 +177,7 @@ export const DeliverablesModal: React.FC<DeliverablesModalProps> = ({
                 : 'hover:bg-slate-100 text-slate-600'
             }`}
           >
-            5. FEED Schematics (SLD / P&ID)
+            {lang === 'zh' ? '5. FEED 原理图 (SLD / P&ID)' : lang === 'fr' ? '5. Schémas FEED (SLD / P&ID)' : '5. FEED Schematics (SLD / P&ID)'}
           </button>
         </div>
 

@@ -3,6 +3,7 @@ import { ARCHITECTURE_PRESETS } from '../data/presets';
 import { DataCenterConfig, EngineeringCalculation } from '../types/datacenter';
 import { calculateEngineeringMetrics } from '../utils/engineeringEngine';
 import { Check, X } from 'lucide-react';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface CompareModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
   currentCalc,
   onApplyPreset
 }) => {
+  const { t, lang } = useLanguage();
   if (!isOpen) return null;
 
   // Calculate comparisons against 2 prominent presets
@@ -33,10 +35,10 @@ export const CompareModal: React.FC<CompareModalProps> = ({
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <div>
             <h3 className="text-base font-bold text-slate-900">
-              Multi-Configuration Architecture Comparison
+              {t.compareModal.title}
             </h3>
             <p className="text-xs text-slate-600 mt-0.5">
-              Benchmark your custom configuration against validated industry design-build baselines.
+              {t.compareModal.subtitle}
             </p>
           </div>
           <button
@@ -52,9 +54,9 @@ export const CompareModal: React.FC<CompareModalProps> = ({
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-100 text-slate-700 uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
-                <th className="py-3 px-4">Metric / Dimension</th>
+                <th className="py-3 px-4">{t.compareModal.colMetric}</th>
                 <th className="py-3 px-4 text-blue-700 bg-blue-50 font-bold">
-                  Current Custom Design
+                  {t.compareModal.colCurrent}
                 </th>
                 <th className="py-3 px-4 font-bold text-slate-900">
                   {preset1.title}
@@ -66,7 +68,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
             </thead>
             <tbody className="divide-y divide-slate-200 text-slate-800 font-mono">
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Accelerator & Silicon</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricAccelerators}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold font-sans">
                   {currentConfig.gpuType.toUpperCase()} ({currentCalc.rackDensityKW} kW/rack)
                 </td>
@@ -74,15 +76,15 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4 font-sans text-slate-900">B200 (65 kW/rack)</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Cluster Scale (GPUs)</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricRacks}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
-                  {currentConfig.ingressMode === 'top-down' ? currentConfig.gpuCount.toLocaleString() : (currentCalc.totalRacks * 72).toLocaleString()} GPUs
+                  {currentConfig.ingressMode === 'top-down' ? currentConfig.gpuCount.toLocaleString() : (currentCalc.totalRacks * 72).toLocaleString()} GPUs ({currentCalc.totalRacks} {lang === 'zh' ? '机柜' : lang === 'fr' ? 'baies' : 'racks'})
                 </td>
-                <td className="py-3 px-4">{preset1.config.gpuCount.toLocaleString()} GPUs</td>
-                <td className="py-3 px-4">{preset2.config.gpuCount.toLocaleString()} GPUs</td>
+                <td className="py-3 px-4">{preset1.config.gpuCount.toLocaleString()} GPUs ({calc1.totalRacks} {lang === 'zh' ? '机柜' : lang === 'fr' ? 'baies' : 'racks'})</td>
+                <td className="py-3 px-4">{preset2.config.gpuCount.toLocaleString()} GPUs ({calc2.totalRacks} {lang === 'zh' ? '机柜' : lang === 'fr' ? 'baies' : 'racks'})</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Critical IT Load</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricITLoad}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
                   {currentCalc.criticalITLoadMW.toFixed(1)} MW
                 </td>
@@ -90,7 +92,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4">{calc2.criticalITLoadMW.toFixed(1)} MW</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Total Facility Load</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricFacilityLoad}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
                   {currentCalc.facilityTotalLoadMW} MW
                 </td>
@@ -98,7 +100,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4">{calc2.facilityTotalLoadMW} MW</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Calculated PUE</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricPUE}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
                   {currentCalc.pue.toFixed(2)}
                 </td>
@@ -106,7 +108,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4 text-emerald-700 font-bold">{calc2.pue.toFixed(2)}</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">White Space Power</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricPowerArch}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-sans">
                   {currentConfig.serverPower.toUpperCase()}
                 </td>
@@ -114,7 +116,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4 font-sans">800V DC Busway</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Total CapEx ($M)</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricTotalCapEx}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold text-sm">
                   ${currentCalc.totalCapExM}M
                 </td>
@@ -122,7 +124,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4 font-bold text-slate-900 text-sm">${calc2.totalCapExM}M</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Unit CapEx / MW</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{lang === 'zh' ? '单位 CapEx / MW' : lang === 'fr' ? 'CapEx unitaire / MW' : 'Unit CapEx / MW'}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
                   ${currentCalc.capexPerMW}M / MW
                 </td>
@@ -130,23 +132,23 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 <td className="py-3 px-4">${calc2.capexPerMW}M / MW</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Annual OpEx (Pwr)</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricAnnualOpEx}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
-                  ${currentCalc.annualPowerCostM}M / yr
+                  ${currentCalc.annualPowerCostM}M / {lang === 'zh' ? '年' : lang === 'fr' ? 'an' : 'yr'}
                 </td>
-                <td className="py-3 px-4">${calc1.annualPowerCostM}M / yr</td>
-                <td className="py-3 px-4">${calc2.annualPowerCostM}M / yr</td>
+                <td className="py-3 px-4">${calc1.annualPowerCostM}M / {lang === 'zh' ? '年' : lang === 'fr' ? 'an' : 'yr'}</td>
+                <td className="py-3 px-4">${calc2.annualPowerCostM}M / {lang === 'zh' ? '年' : lang === 'fr' ? 'an' : 'yr'}</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Critical Path Lead Time</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricLeadTime}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
-                  {currentCalc.criticalPathWeeks} Weeks
+                  {currentCalc.criticalPathWeeks} {lang === 'zh' ? '周' : lang === 'fr' ? 'sem.' : 'Weeks'}
                 </td>
-                <td className="py-3 px-4">{calc1.criticalPathWeeks} Weeks</td>
-                <td className="py-3 px-4">{calc2.criticalPathWeeks} Weeks</td>
+                <td className="py-3 px-4">{calc1.criticalPathWeeks} {lang === 'zh' ? '周' : lang === 'fr' ? 'sem.' : 'Weeks'}</td>
+                <td className="py-3 px-4">{calc2.criticalPathWeeks} {lang === 'zh' ? '周' : lang === 'fr' ? 'sem.' : 'Weeks'}</td>
               </tr>
               <tr>
-                <td className="py-3 px-4 font-sans font-semibold text-slate-600">Earliest COD Date</td>
+                <td className="py-3 px-4 font-sans font-semibold text-slate-600">{t.compareModal.metricCOD}</td>
                 <td className="py-3 px-4 text-blue-800 bg-blue-50/60 font-bold">
                   {currentCalc.projectedCODDate}
                 </td>
@@ -159,26 +161,26 @@ export const CompareModal: React.FC<CompareModalProps> = ({
 
         <div className="flex items-center justify-between pt-2 border-t border-slate-200">
           <div className="text-xs text-slate-500">
-            Tip: Click a preset button below to immediately load that architectural template.
+            {lang === 'zh' ? '提示：点击下方预设按钮可直接加载该行业标杆架构。' : lang === 'fr' ? 'Astuce : Cliquez sur un bouton ci-dessous pour charger immédiatement ce modèle.' : 'Tip: Click a preset button below to immediately load that architectural template.'}
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => { onApplyPreset(preset1.id); onClose(); }}
               className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition cursor-pointer border border-slate-200"
             >
-              Load {preset1.title}
+              {lang === 'zh' ? '加载' : lang === 'fr' ? 'Charger' : 'Load'} {preset1.title}
             </button>
             <button
               onClick={() => { onApplyPreset(preset2.id); onClose(); }}
               className="px-3 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold transition cursor-pointer border border-slate-200"
             >
-              Load {preset2.title}
+              {lang === 'zh' ? '加载' : lang === 'fr' ? 'Charger' : 'Load'} {preset2.title}
             </button>
             <button
               onClick={onClose}
               className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition cursor-pointer shadow-xs"
             >
-              Done
+              {t.common.close}
             </button>
           </div>
         </div>
